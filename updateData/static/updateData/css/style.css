@@ -1,0 +1,24 @@
+.column{
+    color: aliceblue;
+    background-color: black;
+    font-size: 48pt;
+    float: left;
+    width: 30%;
+}
+
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+  height: 70pt;
+}
+.table{
+  border-top: 50px;
+  border-color: antiquewhite;
+  width: 100%;
+  height: 50px;
+}
+
+.background{
+  background-color: aquamarine;
+}

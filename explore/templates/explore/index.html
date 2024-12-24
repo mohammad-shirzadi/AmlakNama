@@ -1,0 +1,108 @@
+{% extends "explore/layout.html" %}
+{% load static %}
+    {% block title %}
+        قیمت املاک محلات شهر تهران
+    {% endblock %}
+    
+    
+    {% block main %}
+    <div class="main">
+        <div class="map">
+            <iframe src="{% static '/explore/map/myhtml.html' %}" frameborder="0" width="100%" height="100%"></iframe>
+        </div>
+        
+        <div class="dashboard">
+            <div class="subdash">
+                <form action="{% url 'home' %}" method="POST" class="col">{% csrf_token %}
+                    <input type="submit" class="{% if lu == 'res' %} lubtn act {% else %} lubtn {% endif %}" name="res" value="مسکونی">
+                    <input type="submit" class="{% if lu == 'resland' %} lubtn act {% else %} lubtn {% endif %}" name="resland" value="زمین مسکونی">
+                    <input type="submit" class="{% if lu == 'com' %} lubtn act {% else %} lubtn {% endif %}" name="com" value="تجاری">
+                    <input type="submit" class="{% if typ == 'buy' %} lubtn act {% else %} lubtn {% endif %}" name="buy" value="خرید و فروش">
+                    <input type="submit" class="{% if typ == 'rent' %} lubtn act {% else %} lubtn {% endif %}" name="rent" value="رهن و اجاره">
+                </form>
+            </div>
+            <div class="subdash">
+                <form action="{% url 'home' %}" method="POST" id="regionForm" class="col">{% csrf_token %}
+                    <label for="1"> انتخاب منطقه </label>
+                    <select name="reg" id="1" onchange="submitForm()">
+                        <option name ="reg" value="0" {% if reg == 0 %} selected {% endif %}>تمام مناطق</option>
+                        {% for region in FRegionList %}
+                        <option name="reg"  value="{{ region }}" {% if reg == region %} selected {% endif %} >منطقه {{ region }}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="2"> انتخاب نقشه </label>
+                    <select name="bgmp" id="2" onchange="submitForm()">
+                        {% for t in Tiles %}
+                        <option name="bgmp"  value="{{ t }}" {% if t == ActiveTile %} selected {% endif %} >{{ t }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
+            <div class="subdash">
+                <table class="tb">
+                    <tr>
+                        <td>
+                            حداکثر قیمت
+                        </td>
+
+                        <td>
+                            {{ MaxPrice }} تومان -- {{ NameMaxPrice }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            میانگین قیمت
+                        </td>
+
+                        <td>
+                            {{ MeanPrice }} تومان
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            حداقل قیمت
+                        </td>
+
+                        <td>
+                            {{ MinPrice }} تومان -- {{ NameMinPrice }}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="control">
+            <div class="chart-co">
+                <canvas id="myChart"></canvas>
+            </div>
+        </div>
+    </div> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
+    <script>
+        {% if reg == 0 %}
+        var xValues = [{% for r in RegionList %} "منطقه{{ r }}", {% endfor %}];
+        {% else %}
+        var xValues = [{% for name in NameList %}"{{ name }}", {% endfor %}];
+        {% endif %}
+        var yValues = [{% for price in PriceList %}"{{ price }}", {% endfor %}];
+        var barColors = "#a2654e";
+
+
+        new Chart("myChart", {
+          type: "bar",
+          data: {
+            labels: xValues,
+            datasets: [{
+              backgroundColor: barColors,
+              data: yValues
+            }]
+          },
+          options: {
+            maintainAspectRatio: false,
+            legend: {display: false},
+            title: {
+              display: true,
+            },
+          }
+        });
+    </script> 
+    {% endblock %}

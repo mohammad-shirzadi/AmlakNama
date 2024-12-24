@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <title>
+        {% block title %}
+        {% endblock %}
+    </title>
+    <meta charset="UTF-8">
+    
+    <link rel="stylesheet" type="text/css" href="{% static 'updateData/css/bootstrap.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'updateData/css/fontawsome.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'updateData/css/style.css' %}">
+
+
+</head>
+<body>
+    <div class="container">
+        <div class="background">
+
+            {% block main %}
+            {% endblock %}
+            
+        </div>
+    </div>
+</body>
+    <script src="{% static 'updateData/js/jquery-3.7.1.min.js' %}"></script>
+    <script src="{% static 'updateData/js/bootstrap.bundle.js' %}"></script>
+    <script src="{% static 'updateData/js/fontawesome.js' %}"></script>
+    <script src="{% static 'updateData/js/main.js' %}"></script>
+</html>

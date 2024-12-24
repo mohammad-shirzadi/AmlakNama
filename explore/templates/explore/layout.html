@@ -1,0 +1,35 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <title>
+        {% block title %}
+        {% endblock %}
+    </title>
+    <meta charset="UTF-8">
+    
+    <link rel="stylesheet" type="text/css" href="{% static '/explore/css/bootstrap.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static '/explore/css/bootstrap.rtl.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static '/explore/css/fontawesome.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static '/explore/css/style.css' %}">
+
+
+</head>
+<body>
+    <div class="bg"></div>
+    <!--<div class="stbar" id="statusbar"  onmouseover="stbarhover()" onmouseout="stbarreset()"></div>-->
+    <div class="stbar">
+        <a href="{% url 'home' %}" class="stb {% if Page == 1 %} on {% endif %}" data-hover="H" data-name="OME">H</a><br>
+        <!--<a href="{% url 'explore' %}" class="stb{% if Page == 2 %} on {% endif %}" data-hover="E" data-name="XPLORE">E</a><br>-->
+        <a href="{% url 'contactus' %}" class="stb{% if Page == 3 %} on {% endif %}" data-hover="C" data-name="ONTACT US">C</a><br>
+        <a href="{% url 'admin:index' %}" class="stb" data-hover="L" data-name="OGIN">L</a><br>
+    </div>
+    {% block main %} {% endblock %}
+</body>
+
+    <script src="{% static '/explore/js/jquery-3.7.1.min.js' %}"></script>
+    <script src="{% static '/explore/js/bootstrap.bundle.js' %}"></script>
+    <script src="{% static '/explore/js/fontawesome.js' %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+    <script src="{% static '/explore/js/main.js' %}"></script>
+</html>

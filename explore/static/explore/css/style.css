@@ -1,0 +1,206 @@
+:root {
+  --zerocolor : #1f1d19;
+  --onecolor: #f0edec;
+  --twocolor: #ffff;
+  --threecolor: #a2654e;
+  --fourcolor: #8b837d;
+}
+
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/static/explore/font/fonts/webfonts/Vazirmatn[wght].woff2') format('woff2 supports variations'),
+       url('/static/explore/font/fonts/webfonts/Vazirmatn[wght].woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+body,HTML{
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  font-family: 'Vazirmatn';
+  display:flex;
+}
+
+
+.bg{
+  position: fixed;
+  background-image: url("/static/explore/image/Untitled.jpg");
+  filter: blur(1px);
+  -webkit-filter: blur(1px);
+  height: 100vh;
+  width: 100vw;
+  background-position: center;
+  background-size: cover;
+  z-index: -1;
+}
+
+.stbar{
+  background-color: #1f1d198f;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 40px;
+  z-index: 10;
+  transition: all 1s;
+  overflow: hidden;
+}
+
+.stbar:hover{
+  width: 150px;
+  background-color: #1f1d19;
+}
+
+.stb{
+  position: relative;
+  text-decoration: none;
+  color: #f0edec;
+  padding: 10px;
+  font-size: 18pt;
+  transition: all 0.3s;
+}
+.stb::after{
+  content: attr(data-name);
+  color: #f0edec;
+  position: absolute;
+  font-size: 14pt;
+  top: 30%;
+  max-width: 0;
+  overflow: hidden;
+  transition: max-width 0.3s;
+  white-space: nowrap;
+}
+
+.stbar:hover .stb::after{
+  max-width: 150px;
+}
+
+.stb:hover{
+  background-color: #8b837d;
+  font-size: 20pt;
+}
+
+.stb:hover .stb::after{
+  font-size: 20pt;
+  top: 0;
+  color: #a2654e;
+}
+
+.on{
+  color: #ddae9d;
+}
+.main{
+  position: fixed;
+  display: flex;
+  top: 40px;
+  left: 45px;
+  right: 10px;
+  bottom: 40px;
+}
+.dirr{
+  direction: rtl;
+}
+.map{
+  position: relative;
+  background-color: #aaaaaa23;
+  width: 70%;
+  height: 70%;
+  padding: 2px;
+}
+
+.dashboard{
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 30%;
+}
+.subdash{
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  direction: rtl;
+  background-color: #f0edecc5;
+  color: rgb(0, 0, 0);
+  padding: 5px;
+  margin: 2px;
+  width: 95%;
+  height: 22.5%;
+  border-radius: 5px;
+}
+
+
+.lubtn{
+  background-color: #f0edec4c;
+  border: 0;
+  border-color: #00000000;
+  width: 100%;
+  height: 20%;
+}
+.act{
+  background-color: #eeddd7b7;}
+.lubtn:hover{
+  background-color: #eeddd7b7;
+}
+
+.col{
+  position: relative;
+  display: flex;
+  direction: rtl;
+  flex-direction: column;
+  background-color: #ffffff65;
+  width: 100%;
+  height: 100%;
+  margin: 2px;
+}
+.tb{
+  text-align: center;
+  font-size: 10pt;
+}
+.control{
+    position: absolute;
+    background-color: #f0edecc5;
+    display: flex;
+    justify-content: center;
+    margin: 2px;
+    top: 70%;
+    width: 100%;
+    height: 30%;
+
+}
+ .chart-co{
+  position: relative;
+  margin: auto;
+  height: 100%;
+  width: 100%;
+ }
+ .continer{
+  background-color: #1f1d196b;
+  color: #f0edec;
+ }
+.formm{
+  color: #eed3c9a2;
+  background-color: #00000059;
+  border: 0px solid #000000;
+  border-radius: 0%;
+}
+.formm::placeholder{
+  justify-content: center;
+  color: #eed3c963;
+}
+.formm:focus{
+  color: #ffffff;
+  background-color: #000000af;
+}
+.formm:default{
+  background-color: #000000af;
+}
+.btnn{
+  color: #fff0d1d7;
+  background-color: #00000098;
+  border: 0px solid #a2654e;
+  border-radius: 0%;
+}
+.btnn:hover{
+  background-color: #000000;
+}

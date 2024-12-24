@@ -1,0 +1,80 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+{% load static %}
+
+{% block title %} به روز رسانی داده‌ها {% endblock %}
+
+{% block content %}
+    <div class="conteiner" dir="rtl">
+        <form action="{% url 'update' %}" method="post">{% csrf_token %}
+
+            <p>جهت به روز رسانه داده‌ها در کاربری‌های مختلف 
+                گزینه مورد نظر را انتخاب کرده 
+                و به‌روزرسانی را انتخاب کنید
+            </p>
+            <p>
+                <input type="checkbox" name="res-buy" id="1" value="res-buy">
+                خرید و فروش مسکونی  (آخرین به روزرسانی:  {{ lastupdateRB }} -تعداد نمونه‌های موجود:  {{ count_res_buy }})   
+            </p>
+            <p>
+                <input type="checkbox" name="res-rent" id="2" value="res-rent">
+                رهن و اجاره مسکونی  (آخرین به روزرسانی:  {{ lastupdateRR }} -تعداد نمونه‌های موجود:  {{ count_res_rent }})
+            </p>
+            <p>
+                <input type="checkbox" name="resland-buy" value="resland-buy">
+                خریدوفروش زمین و ملک کلنگی  (آخرین به روزرسانی:  {{ lastupdateRlB }} -تعداد نمونه‌های موجود: {{ count_resland_buy }})
+            </p>
+            <P>
+                <input type="checkbox" name="com-rent" value="com-rent">
+                رهن و اجاره ملک تجاری  (آخرین به روزرسانی: {{ lastupdateCR }} -تعداد نمونه‌های موجود:  {{ count_com_rent }})
+            </P>
+            <P>
+                <input type="checkbox" name="com-buy" value="com-buy">
+                خرید و فروش ملک تجاری  (آخرین به روزرسانی:{{ lastupdateCB }} -تعداد نمونه‌های موجود: {{ count_com_buy }})
+            </P>
+            <P>   
+                <input type="submit" value="به‌روز رسانی داده‌ها">
+                
+            </P>
+        </form>
+        <div class="table" dir="ltr">
+            log: 
+            <div id="log" dir="ltr"></div>
+        </div>
+            
+        <script>
+            let y = ''
+            const txt = [".",".",".","."];
+            async function getlog() {
+                const response = await fetch("{% url 'update' %}",
+                    {
+                        method: "POST",
+                        headers:{
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: new URLSearchParams({'csrfmiddlewaretoken': '{{ csrf_token }}', a: 'key', b: 'value'})
+
+                    }
+                );
+                const data = await response.json();
+                let x = y;
+                y = data.log;
+                if (x != y){
+                    txt[0] = txt[1];
+                    txt[1] = txt[2];
+                    txt[2] = txt[3];
+                    txt[3] = data.log;
+
+                }
+                let logtext = '';
+                for (let i = 0; i < txt.length; i++)
+                {
+                    logtext += txt[i];
+                }
+                
+                document.getElementById('log').innerText = logtext;                               
+            }
+            setInterval(getlog,1000)
+        </script>
+        </div>
+{% endblock %}
