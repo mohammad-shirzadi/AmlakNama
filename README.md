@@ -4,10 +4,26 @@ This project is a comprehensive Real Estate Management System built using Django
 
 ## Features
 
-- **Property Listings**: Add, update, and delete property details with complete information.
-- **Advanced Search**: Search properties with filters like location, price range, and more.
-- **User Authentication**: Secure login and registration for property managers and buyers.
-- **Responsive Design**: Fully responsive interface for optimal use across devices.
+### 1. **Data Collection**
+- Utilizes **Selenium** and **BeautifulSoup** to scrape real estate listings from websites (e.g., Divar).
+- Captures key details such as:
+  - Property type (residential, commercial, land, etc.)
+  - Price, area, year of construction
+  - Geographic coordinates (latitude, longitude)
+  - Additional metadata (e.g., location description, link to the original listing).
+
+### 2. **Data Storage**
+- Stores collected data in an **SQLite database** for easy access and analysis.
+- Includes mechanisms to prevent duplicate entries and maintain data integrity.
+
+### 3. **Data Analysis and Visualization**
+- Uses **GeoPandas** and **Shapely** to analyze property data spatially.
+- Generates interactive maps using property data and overlays regional boundaries.
+- Supports filtering by:
+  - Property type (buy/rent, residential/commercial)
+  - Region
+- Outputs visualizations as interactive HTML maps.
+
 
 ## Prerequisites
 
