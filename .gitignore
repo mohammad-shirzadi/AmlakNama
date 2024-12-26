@@ -2,4 +2,5 @@ explore/static/explore/map/myhtml.html
 log.txt
 explore/__pycache__/
 propertyprice/__pycache__/
+updateData/shp/
 updateData/__pycache__/
