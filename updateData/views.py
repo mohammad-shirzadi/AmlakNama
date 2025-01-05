@@ -2,14 +2,20 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
-from functions import log, update,cdt
+from .functions import log, update,cdt
 
-LOG = ''
+
 
 @staff_member_required
 def updatePg(request):
     #TODO create variable that show the upadate is running and stope whene html closed(?!)
-    #TODO cheang the log save file
+
+
+    def logreader():
+        with open("log.txt",'r') as file:
+            logtxt = file.readlines()
+            return logtxt[-1]
+
 
     context = {
         "count_res_rent" : cdt('res','rent')[0],
@@ -22,11 +28,11 @@ def updatePg(request):
         "lastupdateCB" : cdt('com','buy')[1],
         "count_com_rent" : cdt('com','rent')[0],
         "lastupdateCR" : cdt('com','rent')[1],
-        "inlog" : LOG
+        "inlog" : logreader()
     }
 
     if request.method == "POST" and request.POST.get('a'):
-        return JsonResponse({'log': LOG})
+        return JsonResponse({'log': logreader()})
     
     if request.method == 'POST':
         if request.POST.get('res-rent'):

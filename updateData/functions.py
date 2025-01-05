@@ -20,8 +20,8 @@ import re
 
 
 
-
 LOG = ''
+
 def log(a):
     global LOG
     LOG = str(datetime.datetime.today())+ ':   ' + a + '\n'
@@ -203,7 +203,7 @@ def update(landuse , type):
                         p = re.search(r'\d[\d\u066C]*',a.get_text()).group()
                         if re.match('1+[\u066C+1+]+', p):
                             log(Plink + ' have wrong price')
-                            break
+                            continue
                     elif "قیمت هر متر" in a.get_text():
                         p = re.search(r'\d[\d\u066C]*',a.get_text()).group()
                         if not re.match('1+[\u066C+1+]+', p):
@@ -213,12 +213,12 @@ def update(landuse , type):
                             log(Plink + ' have wrong price')
                 if not price:
                     log(Plink + ' have no price')
-                    break
+                    continue
                 #get_loc
                 XY = get_loc(driver,Plink)
                 if not XY:
                     log(Plink + ' have no loc')
-                    break
+                    continue
                 lat, long = XY[0], XY[1]
                 #get_Area & CYear
                 a = soup1.find_all('table', class_ = "kt-group-row")[0]
@@ -280,7 +280,7 @@ def update(landuse , type):
                         p = re.search(r'\d[\d\u066C]*',a.get_text())
                         if p and re.match('1+[\u066C+1+]+', p.group()):
                             log(Plink + ' have wrong price')
-                            break
+                            continue
                         elif p and "ودیعه" in a.get_text():  
                             p = p.group().replace('\u066C', '')
                             mortgage = int(p)
@@ -328,13 +328,13 @@ def update(landuse , type):
                 price = (mortgage + (rent*30))/int(Area)
                 if not price or price<0:
                     log(Plink + ' have wrong price')
-                    break
+                    continue
                 
                 #get_loc
                 XY = get_loc(driver,Plink)
                 if not XY:
                     log(Plink + ' have no loc')
-                    break
+                    continue
                 lat , long = XY[0],XY[1]
                 #get_mahale1
                 mahale_text = soup1.find_all('div', class_ = "kt-page-title__subtitle kt-page-title__subtitle--responsive-sized")[0]
@@ -391,7 +391,7 @@ def update(landuse , type):
                         p = re.search(r'\d[\d\u066C]*',a.get_text()).group()
                         if re.match('1+[\u066C+1+]+', p):
                             log(Plink + ' have wrong price')
-                            break
+                            continue
                     elif "قیمت هر متر" in a.get_text():
                         p = re.search(r'\d[\d\u066C]*',a.get_text()).group()
                         if not re.match('1+[\u066C+1+]+', p):
@@ -405,12 +405,12 @@ def update(landuse , type):
                         Area = int(p)
                 if not price:
                     log(Plink + ' have no price')
-                    break
+                    continue
                 #get_loc
                 XY = get_loc(driver,Plink)
                 if not XY:
                     log(Plink + ' have no loc')
-                    break
+                    continue
                 lat, long = XY[0], XY[1]
                 #get_mahale
                 mahale_text = soup1.find_all('div', class_ = "kt-page-title__subtitle kt-page-title__subtitle--responsive-sized")[0]
@@ -466,7 +466,7 @@ def update(landuse , type):
                         p = re.search(r'\d[\d\u066C]*',a.get_text())
                         if p and re.match('1+[\u066C+1+]+', p.group()):
                             log(Plink + ' have wrong price')
-                            break
+                            continue
                     elif "قیمت هر متر" in a.get_text():
                         p = re.search(r'\d[\d\u066C]*',a.get_text()).group()
                         if not re.match('1+[\u066C+1+]+', p):
@@ -477,7 +477,7 @@ def update(landuse , type):
                             log(Plink + ' have wrong price')
                 if not price:
                     log(Plink + ' have no price') 
-                    break
+                    continue
                 #get_loc
                 XY = get_loc(driver,Plink)
                 if not XY:
@@ -552,7 +552,7 @@ def update(landuse , type):
                             p = re.search(r'\d[\d\u066C]*',a.get_text())
                             if p and re.match('1+[\u066C+1+]+', p.group()):
                                 log(Plink + ' have wrong price')
-                                break
+                                continue
                             elif not p and "ودیعه" in a.get_text() and "اجاره" in a.get_text():
                                 pass
                             elif p and "ودیعه" in a.get_text():  
