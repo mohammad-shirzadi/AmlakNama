@@ -4,3 +4,4 @@ explore/__pycache__/
 propertyprice/__pycache__/
 updateData/shp/
 updateData/__pycache__/
+*.pyc
