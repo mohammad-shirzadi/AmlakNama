@@ -213,12 +213,12 @@ def update(landuse , type):
                             log(Plink + ' have wrong price')
                 if not price:
                     log(Plink + ' have no price')
-                    continue
+                    break
                 #get_loc
                 XY = get_loc(driver,Plink)
                 if not XY:
                     log(Plink + ' have no loc')
-                    continue
+                    break
                 lat, long = XY[0], XY[1]
                 #get_Area & CYear
                 a = soup1.find_all('table', class_ = "kt-group-row")[0]

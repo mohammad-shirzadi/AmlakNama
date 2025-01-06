@@ -14,6 +14,8 @@ def updatePg(request):
     def logreader():
         with open("log.txt",'r') as file:
             logtxt = file.readlines()
+            if not logtxt: 
+                logtxt = ['']
             return logtxt[-1]
 
 
