@@ -32,7 +32,7 @@ def log(a):
 def not_duplicate(output):
 
     landuse = output['landuse']
-    type = output['type']
+    ptype = output['ptype']
     price = output['price']
     area = output['Area']
     Cyear = output['CYear']
@@ -47,7 +47,7 @@ def not_duplicate(output):
 
     result = propertyModel.objects.filter(
         landuse=landuse, 
-        type=type, 
+        ptype=ptype, 
         price=price, 
         area=area, 
         Cyear=Cyear, 
@@ -69,7 +69,7 @@ def not_duplicate(output):
 def insert(output):
 
     landuse = output['landuse']
-    type = output['type']
+    ptype = output['ptype']
     price = output['price']
     area = output['Area']
     Cyear = output['CYear']
@@ -85,7 +85,7 @@ def insert(output):
     try:
         propertyModel.objects.create(
             landuse=landuse, 
-            type=type, 
+            ptype=ptype, 
             price=price, 
             area=area, 
             Cyear=Cyear, 
@@ -176,21 +176,20 @@ def get_loc(driver,Plink):
     x_y =[float(lat),float(long)]
     return x_y
 
-def update(landuse , type):
-    log('update(%s, %s) is run'% (landuse,type))
-    match (landuse, type):
+
+def getprice(landuse,Ptype):
+    pass
+
+
+def update(landuse , ptype):
+    log('update(%s, %s) is run'% (landuse,ptype))
+    match (landuse, ptype):
         case ('res','buy'):
             insert_counter = 0
             url = 'https://divar.ir/s/tehran/buy-apartment'   # just appartment, not villa 
             Pcases = PropertyCases(url)
             log('get'+ str(len(Pcases)) +' Pcasses')
             for Pcase in Pcases:
-                Area = ''
-                CYear = ''
-                XY = []
-                exp = ''
-                mahale = ''
-                price = 0.0
                 Plink = 'https://divar.ir'+ Pcase.get('href')
                 driver = start_driver()
                 driver.get(Plink)
@@ -203,7 +202,7 @@ def update(landuse , type):
                         p = re.search(r'\d[\d\u066C]*',a.get_text()).group()
                         if re.match('1+[\u066C+1+]+', p):
                             log(Plink + ' have wrong price')
-                            continue
+                            break
                     elif "قیمت هر متر" in a.get_text():
                         p = re.search(r'\d[\d\u066C]*',a.get_text()).group()
                         if not re.match('1+[\u066C+1+]+', p):
@@ -234,7 +233,7 @@ def update(landuse , type):
                 #output
                 output = {
                     'landuse': landuse,
-                    'type' : type,
+                    'ptype' : ptype,
                     'price' : price,
                     'Area': int(Area),
                     'CYear': CYear , 'mortgage': 0,
@@ -253,7 +252,7 @@ def update(landuse , type):
                 else: 
                     log(Plink + ' is duplicate')
             driver.quit()
-            log(landuse+', '+type+' UPDATED!')
+            log(landuse+', '+ptype+' UPDATED!')
         case ('res', 'rent'):
             insert_counter = 0
             url = 'https://divar.ir/s/tehran/rent-residential'
@@ -345,7 +344,7 @@ def update(landuse , type):
                 #output
                 output = {
                     'landuse': landuse,
-                    'type' : type,
+                    'ptype' : ptype,
                     'price' : price,
                     'Area': int(Area),
                     'CYear': CYear, 
@@ -366,7 +365,7 @@ def update(landuse , type):
                 else: 
                     log(Plink + ' is duplicate')
             driver.quit()
-            log(landuse+', '+type+' UPDATED!')       
+            log(landuse+', '+ptype+' UPDATED!')       
         case ('resland', 'buy'):
             insert_counter = 0
             url = 'https://divar.ir/s/tehran/buy-old-house'
@@ -420,7 +419,7 @@ def update(landuse , type):
                 #output
                 output = {
                     'landuse': landuse, 
-                    'type' : type, 
+                    'ptype' : ptype, 
                     'price' : price, 
                     'Area': int(Area), 
                     'CYear': 0, 
@@ -441,7 +440,7 @@ def update(landuse , type):
                 else: 
                     log(Plink + ' is duplicate')
             driver.quit()
-            log(landuse+', '+type+' UPDATED!')
+            log(landuse+', '+ptype+' UPDATED!')
         case ('com', 'buy'):
             insert_counter = 0
             url = 'https://divar.ir/s/tehran/buy-commercial-property'
@@ -498,7 +497,7 @@ def update(landuse , type):
                 #output
                 output = {
                     'landuse': landuse,
-                    'type' : type ,
+                    'ptype' : ptype ,
                     'price' : price, 
                     'Area': int(Area) , 
                     'CYear': CYear , 
@@ -520,7 +519,7 @@ def update(landuse , type):
 
                 
             driver.quit()
-            log(landuse+', '+type+' UPDATED!')
+            log(landuse+', '+ptype+' UPDATED!')
         case ('com', 'rent'):
             insert_counter = 0
             url = 'https://divar.ir/s/tehran/rent-commercial-property'
@@ -613,7 +612,7 @@ def update(landuse , type):
                     #output
                     output = {
                         'landuse': landuse,
-                        'type' : type,
+                        'ptype' : ptype,
                         'price' : price,
                         'Area': int(Area),
                         'CYear': CYear,
@@ -633,14 +632,14 @@ def update(landuse , type):
                     else: 
                         log(Plink + ' is duplicate')
             driver.quit()
-            log(landuse+', '+type+' UPDATED!')
+            log(landuse+', '+ptype+' UPDATED!')
         case _ :
             raise ValueError('input argument is wrong')                
 
 def cdt(lu, typ):
-    if propertyModel.objects.filter(landuse=lu,type= typ):
-        count = propertyModel.objects.filter(landuse=lu, type=typ).count()
-        lastupdate = propertyModel.objects.filter(landuse=lu ,type=typ).last().date_time
+    if propertyModel.objects.filter(landuse=lu,ptype= typ):
+        count = propertyModel.objects.filter(landuse=lu, ptype=typ).count()
+        lastupdate = propertyModel.objects.filter(landuse=lu ,ptype=typ).last().date_time
     else:
         count = 0
         lastupdate = "بروز رسانی نشده"

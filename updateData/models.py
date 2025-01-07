@@ -6,7 +6,7 @@ from django.db import models
 class propertyModel(models.Model):
     case_id = models.AutoField(primary_key=True,unique=True,editable=False)
     landuse = models.CharField(max_length=10)
-    type= models.CharField(max_length=10)
+    ptype= models.CharField(max_length=10)
     price = models.IntegerField("قیمت در ازا هر مترمربع")
     area = models.IntegerField("مساحت")
     Cyear = models.CharField("سال ساخت")

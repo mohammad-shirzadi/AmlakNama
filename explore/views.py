@@ -110,6 +110,7 @@ def home(request):
             createmap(lu=LU,typ=TYP,reg=REG,tile=I)       
 
     dt = createmap(lu=LU,typ=TYP,reg=REG,tile=I)
+    
     #'RegionList' : lr,
     #'NameList' : ln,
     #'PriceList' : lp,

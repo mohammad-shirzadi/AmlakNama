@@ -31,7 +31,7 @@ def makeshape(modeladmin, request, queryset):
     
         case_id = []
         landuse = []
-        type = []
+        ptype = []
         price = []
         area = []
         Cyear = []
@@ -47,7 +47,7 @@ def makeshape(modeladmin, request, queryset):
         for data in all_data:
             case_id.append(data.case_id)
             landuse.append(data.landuse)
-            type.append(data.type)
+            ptype.append(data.ptype)
             price.append(data.price)
             area.append(data.area)
             Cyear.append(data.Cyear)
@@ -64,7 +64,7 @@ def makeshape(modeladmin, request, queryset):
         ATable = {
             'caseid': case_id,
             'landuse': landuse,
-            'type': type,
+            'ptype': ptype,
             'price': price,
             'area': area,
             'Cyear': Cyear,
@@ -101,7 +101,7 @@ def makeshape(modeladmin, request, queryset):
                     return x.mean()
             except:
                 return None  
-        polymean = joined.dissolve(["NAME_MAHAL","landuse","type","reg_no"],f,False)
+        polymean = joined.dissolve(["NAME_MAHAL","landuse","ptype","reg_no"],f,False)
         polymean['FID']=range(0,len(polymean))
         polymean.set_index('FID',inplace=True)     
         polymean.to_file(r"updateData/shp/polymean.shp")
@@ -115,7 +115,7 @@ def makeshape(modeladmin, request, queryset):
         MTP_mapping = {
             "name_mahal" : "NAME_MAHAL",
             "landuse" : "landuse",
-            "type" : "type",
+            "ptype" : "ptype",
             "reg_no" : "reg_no",
             "price" : "price", 
             "mortgage" : "mortgage",
@@ -134,9 +134,9 @@ def makeshape(modeladmin, request, queryset):
 
 
 class propertyModelAdmin(admin.ModelAdmin):
-    list_display = ["case_id","landuse","type", "area", "price",'mortgage', 'rent', "mahale", "date_time"]
-    search_fields = ["case_id","landuse","type", "area", "price",'mortgage', 'rent', "mahale","exp", "date_time"]
-    list_filter = ["landuse","type", "date_time"]
+    list_display = ["case_id","landuse","ptype", "area", "price",'mortgage', 'rent', "mahale", "date_time"]
+    search_fields = ["case_id","landuse","ptype", "area", "price",'mortgage', 'rent', "mahale","exp", "date_time"]
+    list_filter = ["landuse","ptype", "date_time"]
     actions = [makeshape]
     #def get_urls(self):
     #    from django.urls import path
