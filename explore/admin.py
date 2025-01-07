@@ -6,7 +6,7 @@ class MahalatTehranAdmin(admin.GISModelAdmin):
     list_display = ["name_mahal","reg_no"]
 
 class MTPAdmin(admin.GISModelAdmin):
-    list_display = ["landuse","type","name_mahal", "price", "reg_no"]
+    list_display = ["landuse","ptype","name_mahal", "price", "reg_no"]
 
 class massage(normaladmin.ModelAdmin):
     list_display = ["name","email","txtmasages"]

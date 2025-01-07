@@ -12,7 +12,7 @@ class MahalatTehran(models.Model):
 
 class MTPPolygon(models.Model):
     landuse = models.CharField(max_length=10)
-    type= models.CharField(max_length=10)
+    ptype= models.CharField(max_length=10)
     price = models.IntegerField()
     mortgage = models.IntegerField(default=0)
     rent = models.IntegerField(default=0)
