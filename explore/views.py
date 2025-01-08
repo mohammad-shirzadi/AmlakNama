@@ -32,8 +32,8 @@ def home(request):
         elif typ == 'rent':
             popupf = fieldR
 
-        mp = Pgdf.query(f'landuse == "{lu}" and type == "{typ}"'+ txt)
-        fmp = Pgdf.query(f'landuse == "{lu}" and type == "{typ}"')
+        mp = Pgdf.query(f'landuse == "{lu}" and ptype == "{typ}"'+ txt)
+        fmp = Pgdf.query(f'landuse == "{lu}" and ptype == "{typ}"')
     
         m = mp.explore(
             column="price",
