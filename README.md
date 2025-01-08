@@ -1,8 +1,15 @@
-# Real Estate Management System
+# AmlakNama
 
-This project is a comprehensive Real Estate Management System built using Django. It enables users to list properties, manage their listings, and search for properties based on various criteria. The system is designed to provide a seamless experience for both property managers and buyers.
+AmlakNama is a tool for analyzing and visualizing the economic value of real estate and land across different districts of Tehran.
+
+
 
 ## Features
+
+Economic value visualization for properties across Tehran’s districts and neighborhoods.
+Categorization of data by property type (residential, commercial, land).
+Separate insights for purchase/sale and rental/lease options.
+Interactive map for data visualization and price comparison.
 
 ### 1. **Data Collection**
 - Utilizes **Selenium** and **BeautifulSoup** to scrape real estate listings from websites (e.g., Divar).
@@ -27,12 +34,14 @@ This project is a comprehensive Real Estate Management System built using Django
 
 ## Prerequisites
 
-- Python 3.x
-- Django 3.x or later
+Languages and Frameworks: Python, Django, HTML, CSS, JavaScript
+
+Libraries and Tools: Pandas, GeoPandas, NumPy, Folium, Selenium, BeautifulSoup
+
 
 ## Installation
 
-Follow these steps to set up and run the Real Estate Management System:
+Follow these steps to set up and run the AmlakNama System:
 
 1. Clone the repository:
    ```bash
@@ -78,15 +87,27 @@ Follow these steps to set up and run the Real Estate Management System:
 
 ## Usage
 
+### Project Objective
+
+The goal of this project is to leverage open data to analyze the economic value of real estate in Tehran, helping users make informed decisions about buying, selling, renting, or leasing properties.
+
 - **Admins**: Manage all property listings, users, and system settings.
 - **Property Owners**: List and manage properties.
-- **Buyers**: Browse and search for properties.
+- **Buyers**: Browse and search for properties. 
+
+## Current Status
+
+The project is in its early development phase. Data has been collected from online sources, with the potential to integrate official datasets in the future.
 
 ## Contributing
 
-We welcome contributions! To contribute:
-
+This repository is open to contributions. To contribute:
 1. Fork the repository.
 2. Create a new branch for your feature or bugfix.
 3. Commit your changes and push the branch.
 4. Submit a pull request with a description of your changes.
+
+
+## License
+
+This project is licensed under the MIT License. For more details, please refer to the LICENSE file.
