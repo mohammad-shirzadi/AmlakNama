@@ -87,6 +87,8 @@ def makeshape(modeladmin, request, queryset):
     def geoprocsseing(pointgdf):
         #deffine polygon
         mahalat = geopandas.read_file(r'updateData/shp/StaticShape/Mahalat_Tehran.shp')
+        ## TODO Validate joined data and delete wrong featuresh
+    
         joined = mahalat.sjoin(pointgdf)
         def f(x):
             try:
