@@ -64,11 +64,18 @@ def home(request):
         lr = list(mp.reg_no)
         ln = list(mp.NAME_MAHAL)
         lp = list(mp.price)
+        regmeanprice = mp.pivot_table('price','reg_no')
+        reglist = list(regmeanprice.index)
+        regmean = []
+        for i in range(len(regmeanprice.values.tolist())):
+            regmean.append(regmeanprice.values.tolist()[i][0])
         maxp = numpy.max(lp)
         minp = numpy.min(lp)
         meanp = numpy.mean(lp)
         d = {
             'RegionList' : numpy.unique(lr),
+            'RNList' : reglist,
+            'RMList' : regmean,
             'FRegionList' : numpy.unique(list(fmp.reg_no)),
             'NameList' : ln,
             'PriceList' : lp,
@@ -134,6 +141,8 @@ def home(request):
         'reg' : REG,
         'Tiles' : Alltile,
         'ActiveTile' : I,
+        'RNList' : dt['RNList'],
+        'RMList' : dt['RMList'],
     }
     return render(request, 'explore/index.html', context)
 

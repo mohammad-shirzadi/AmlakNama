@@ -79,11 +79,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
     <script>
         {% if reg == 0 %}
-        var xValues = [{% for r in RegionList %} "منطقه{{ r }}", {% endfor %}];
+        var xValues = [{% for r in RNList %} "منطقه{{ r }}", {% endfor %}];
+        var yValues = [{% for price in RMList %}"{{ price }}", {% endfor %}];
+        
         {% else %}
         var xValues = [{% for name in NameList %}"{{ name }}", {% endfor %}];
-        {% endif %}
         var yValues = [{% for price in PriceList %}"{{ price }}", {% endfor %}];
+        
+        {% endif %}
         var barColors = "#a2654e";
 
 
