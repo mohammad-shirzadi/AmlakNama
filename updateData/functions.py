@@ -101,7 +101,6 @@ def insert(output):
 
     except Exception as error:
         log(str(error)+"---"+ str(output))
-        raise Exception
     
 def start_driver():
 
@@ -154,8 +153,7 @@ def get_exp(soup1):
     explink = explink
     return explink
 
-def get_loc(driver,Plink):
-    driver.get(Plink)
+def get_loc(driver):
     try:
         pic = WebDriverWait(driver,10).until(
             EC.element_to_be_clickable((By.CLASS_NAME, "image-dbbad"))
@@ -177,8 +175,76 @@ def get_loc(driver,Plink):
     return x_y
 
 
-def getprice(landuse,Ptype):
-    pass
+def buyPrice(driver):
+    soup1 = BeautifulSoup(driver.page_source, 'html.parser')
+    prices = soup1.find_all('div', class_ = "kt-base-row kt-base-row--large kt-unexpandable-row")
+    price = None
+    Area = None
+    for a in prices:
+        p = re.search(r'\d[\d\u066C]*',a.get_text())
+        if not p:
+            pass
+        elif re.match(r'۱{1,3}(٬۱{3})+$', p.group().replace('\u066C', '')):
+            return [None, None]
+        elif "قیمت هر متر" in a.get_text():
+            p = p.group().replace('\u066C', '')
+            price = int(p)
+        elif "متراژ" in a.get_text():
+            p = p.group().replace('\u066C', '')
+            Area = int(p)
+    return [price, Area]
+
+def rentPrice(driver):
+    soup1 = BeautifulSoup(driver.page_source, 'html.parser')
+    prices = soup1.find_all('div', class_ = "kt-base-row kt-base-row--large kt-unexpandable-row")
+    mortgage = None
+    rent = None
+    style = soup1.find_all('input' , class_= "kt-range-slider__input")
+    #get_mortgage, rent, area, yeare
+    if style:
+        unit = 0
+        prices = soup1.find_all('td' , class_= 'kt-group-row-item kt-group-row-item__value kt-group-row-item--info-row')
+        for x in [3,4]:
+            if 'میلیون' in prices[x].get_text():
+                unit = 1000000
+            elif 'میلیارد' in prices[x].get_text():
+                unit = 1000000000
+            elif 'هزار' in prices[x].get_text():
+                unit = 1
+
+            p = re.search(r'(\d+\.*\d*)', prices[x].get_text())
+            if p and re.match(r'۱{1,3}(٬۱{3})+$', p.group()):
+                return [None, None]
+            elif p:
+                m = float(p.group().split(' ')[0])*unit
+            else:
+                m = 0
+        
+            if x == 3:
+                mortgage=m
+            elif x == 4:
+                rent=m
+        return [mortgage,rent]
+    elif not style:
+        for a in prices: 
+            p = re.search(r'\d[\d\u066C]*',a.get_text())
+            if p and re.match(r'۱{1,3}(٬۱{3})+$', p.group()):
+                return [None, None]
+            elif p and "ودیعه" in a.get_text():  
+                p = p.group().replace('\u066C', '')
+                mortgage = int(p)
+            elif p and "اجاره" in a.get_text():
+                p = p.group().replace('\u066C', '')
+                rent = int(p)
+            elif not p and "ودیعه" in a.get_text() and "اجاره" not in a.get_text():
+                    mortgage = 0
+            elif not p and "اجاره" in a.get_text() and "ودیعه" not in a.get_text():
+                    rent = 0
+        if mortgage == 0 and rent == 0:
+            return [None, None]
+        
+        return [mortgage,rent]
+
 
 
 def update(landuse , ptype):
@@ -190,36 +256,32 @@ def update(landuse , ptype):
             Pcases = PropertyCases(url)
             log('get'+ str(len(Pcases)) +' Pcasses')
             for Pcase in Pcases:
+                Area = ''
+                CYear = ''
+                XY = []
+                exp = ''
+                mahale = ''
+                mortgage = 0.0
+                price = 0.0
+                rent = 0.0                
                 Plink = 'https://divar.ir'+ Pcase.get('href')
                 driver = start_driver()
                 driver.get(Plink)
                 time.sleep(5)
                 #get_price
-                soup1 = BeautifulSoup(driver.page_source, 'html.parser')
-                prices = soup1.find_all('div', class_ = "kt-base-row kt-base-row--large kt-unexpandable-row")
-                for a in prices:
-                    if "قیمت کل" in a.get_text():
-                        p = re.search(r'\d[\d\u066C]*',a.get_text()).group()
-                        if re.match('1+[\u066C+1+]+', p):
-                            log(Plink + ' have wrong price')
-                            break
-                    elif "قیمت هر متر" in a.get_text():
-                        p = re.search(r'\d[\d\u066C]*',a.get_text()).group()
-                        if not re.match('1+[\u066C+1+]+', p):
-                            p = p.replace('\u066C', '')
-                            price = int(p)
-                        else:
-                            log(Plink + ' have wrong price')
+                p_a = buyPrice(driver)
+                price = p_a[0]
                 if not price:
                     log(Plink + ' have no price')
-                    break
+                    continue
                 #get_loc
-                XY = get_loc(driver,Plink)
+                XY = get_loc(driver)
                 if not XY:
                     log(Plink + ' have no loc')
-                    break
-                lat, long = XY[0], XY[1]
+                    continue
+                lat, long = XY
                 #get_Area & CYear
+                soup1 = BeautifulSoup(driver.page_source, 'html.parser')
                 a = soup1.find_all('table', class_ = "kt-group-row")[0]
                 d = a.get_text('thead').split('thead')
                 Area = d[3]
@@ -227,7 +289,6 @@ def update(landuse , ptype):
                 #get_mahale
                 mahale_text = soup1.find_all('div', class_ = "kt-page-title__subtitle kt-page-title__subtitle--responsive-sized")[0]
                 mahale = mahale_text.get_text().split("\u060C")[1]
-                mahale = mahale
                 #get_exp
                 exp = get_exp(soup1)
                 #output
@@ -248,7 +309,7 @@ def update(landuse , ptype):
                 if not_duplicate(output):
                     insert(output)
                     insert_counter = insert_counter + 1
-                    log(str(insert_counter) + " Case inserted"+ " & "+'Case '+ str(Pcases.index(Pcase)+1) + 'th inserted')
+                    log('Case '+ str(Pcases.index(Pcase)+1) +'/'+ str(len(Pcases)) +  " & "+ str(insert_counter) + " Case inserted")
                 else: 
                     log(Plink + ' is duplicate')
             driver.quit()
@@ -267,74 +328,40 @@ def update(landuse , ptype):
                 mortgage = 0.0
                 price = 0.0
                 rent = 0.0
+                FArea = None
+                F = None
                 Plink = 'https://divar.ir'+ Pcase.get('href')
                 driver = start_driver()
                 driver.get(Plink)
                 time.sleep(5)
                 #get_mortgage, rent, area, yeare
-                soup1 = BeautifulSoup(driver.page_source, 'html.parser')
-                prices = soup1.find_all('div', class_ = "kt-base-row kt-base-row--large kt-unexpandable-row")
-                if not soup1.find_all('input' , class_= "kt-range-slider__input"):
-                    for a in prices: 
-                        p = re.search(r'\d[\d\u066C]*',a.get_text())
-                        if p and re.match('1+[\u066C+1+]+', p.group()):
-                            log(Plink + ' have wrong price')
-                            continue
-                        elif p and "ودیعه" in a.get_text():  
-                            p = p.group().replace('\u066C', '')
-                            mortgage = int(p)
-                        elif p and "اجاره" in a.get_text():
-                            p = p.group().replace('\u066C', '')
-                            rent = int(p)
-                        elif not p and "ودیعه" in a.get_text():
-                                mortgage = 0
-                        elif not p and "اجاره" in a.get_text():
-                                rent = 0
-                        elif (not p) and ("ودیعه" in a.get_text()) and ("اجاره" in a.get_text()):
-                            pass
+                mortgage, rent = rentPrice(driver)
+                soup1 = BeautifulSoup(driver.page_source, 'html.parser')                
+                style = soup1.find_all('input' , class_= "kt-range-slider__input")
+                if style:
+                    prices = soup1.find_all('td' , class_= 'kt-group-row-item kt-group-row-item__value kt-group-row-item--info-row')
+                    Area = prices[0].get_text()
+                    CYear = prices[1].get_text()
+                elif not style:
                     FArea = soup1.find_all("table", class_= "kt-group-row")[0]
                     F = FArea.get_text('p').split('p')
                     for i in range(len(F)):
                         if 'متراژ' in F[i]:
                             Area = F[int(i+ (len(F)/2))]
                         elif 'ساخت' in F[i]:
-                            CYear = F[int(i+(len(F)/2))]
-                elif soup1.find_all('input' , class_= "kt-range-slider__input"):
-                    prices = soup1.find_all('td' , class_= 'kt-group-row-item kt-group-row-item__value kt-group-row-item--info-row')
-                    Area = prices[0].get_text()
-                    CYear = prices[1].get_text()
-                    unit = 0
-                    if 'میلیون' in prices[3].get_text():
-                        unit = 1000000
-                    elif 'میلیارد' in prices[3].get_text():
-                        unit = 1000000000
-                    elif 'هزار' in prices[3].get_text():
-                        unit = 1
-                    if re.search(r'(\d+\.*\d*)', prices[3].get_text()):
-                        mortgage = float(re.search(r'(\d+\.*\d*)', prices[3].get_text()).group().split(' ')[0])*unit
-                    else:
-                        mortgage = 0
-                    if 'میلیون' in prices[4].get_text():
-                        unit = 1000000
-                    elif 'میلیارد' in prices[4].get_text():
-                        unit = 1000000000
-                    elif 'هزار' in prices[4].get_text():
-                        unit = 1
-                    if re.search(r'(\d+\.*\d*)', prices[4].get_text()):
-                        rent = float(re.search(r'(\d+\.*\d*)', prices[4].get_text()).group().split(' ')[0])*unit
-                    else:
-                        rent = 0
-                price = (mortgage + (rent*30))/int(Area)
-                if not price or price<0:
+                            CYear = F[int(i+ (len(F)/2))]
+                if mortgage is None and rent is None:
                     log(Plink + ' have wrong price')
                     continue
-                
+                mortgage = int(mortgage)
+                rent = int(rent)
+                price = (mortgage + (rent*30))/int(Area)
                 #get_loc
-                XY = get_loc(driver,Plink)
+                XY = get_loc(driver)
                 if not XY:
                     log(Plink + ' have no loc')
                     continue
-                lat , long = XY[0],XY[1]
+                lat, long = XY
                 #get_mahale1
                 mahale_text = soup1.find_all('div', class_ = "kt-page-title__subtitle kt-page-title__subtitle--responsive-sized")[0]
                 mahale = mahale_text.get_text().split("\u060C")[1]
@@ -361,7 +388,7 @@ def update(landuse , ptype):
                 if not_duplicate(output):
                     insert(output)
                     insert_counter = insert_counter + 1
-                    log(str(insert_counter) + " Case inserted"+ " & "+'Case '+ str(Pcases.index(Pcase)+1) + 'th inserted')
+                    log('Case '+ str(Pcases.index(Pcase)+1) +'/'+ str(len(Pcases)) +  " & "+ str(insert_counter) + " Case inserted")
                 else: 
                     log(Plink + ' is duplicate')
             driver.quit()
@@ -384,33 +411,16 @@ def update(landuse , ptype):
                 time.sleep(5)
                 #get_price, area
                 soup1 = BeautifulSoup(driver.page_source, 'html.parser')
-                prices = soup1.find_all('div', class_ = "kt-base-row kt-base-row--large kt-unexpandable-row")
-                for a in prices:
-                    if "قیمت کل" in a.get_text():
-                        p = re.search(r'\d[\d\u066C]*',a.get_text()).group()
-                        if re.match('1+[\u066C+1+]+', p):
-                            log(Plink + ' have wrong price')
-                            continue
-                    elif "قیمت هر متر" in a.get_text():
-                        p = re.search(r'\d[\d\u066C]*',a.get_text()).group()
-                        if not re.match('1+[\u066C+1+]+', p):
-                            p = p.replace('\u066C', '')
-                            price = int(p)
-                        else:
-                            log(Plink + ' have wrong price')
-                    elif "متراژ" in a.get_text():
-                        p = re.search(r'\d[\d\u066C]*',a.get_text()).group()
-                        p = p.replace('\u066C', '')
-                        Area = int(p)
+                price, Area = buyPrice(driver)
                 if not price:
                     log(Plink + ' have no price')
                     continue
                 #get_loc
-                XY = get_loc(driver,Plink)
+                XY = get_loc(driver)
                 if not XY:
                     log(Plink + ' have no loc')
                     continue
-                lat, long = XY[0], XY[1]
+                lat, long = XY
                 #get_mahale
                 mahale_text = soup1.find_all('div', class_ = "kt-page-title__subtitle kt-page-title__subtitle--responsive-sized")[0]
                 mahale = mahale_text.get_text().split("\u060C")[1]
@@ -432,11 +442,10 @@ def update(landuse , ptype):
                     'link' : Plink, 
                     'date_time' : datetime.datetime.today()
                 }
-                
                 if not_duplicate(output):
                     insert(output)
                     insert_counter = insert_counter + 1
-                    log(str(insert_counter) + " Case inserted"+ " & "+'Case '+ str(Pcases.index(Pcase)+1) + 'th inserted')
+                    log('Case '+ str(Pcases.index(Pcase)+1) +'/'+ str(len(Pcases)) +  " & "+ str(insert_counter) + " Case inserted")
                 else: 
                     log(Plink + ' is duplicate')
             driver.quit()
@@ -458,31 +467,19 @@ def update(landuse , ptype):
                 driver.get(Plink)
                 time.sleep(5)
                 #get_price
-                soup1 = BeautifulSoup(driver.page_source, 'html.parser')
-                prices = soup1.find_all('div', class_ = "kt-base-row kt-base-row--large kt-unexpandable-row")
-                for a in prices:
-                    if "قیمت کل" in a.get_text():
-                        p = re.search(r'\d[\d\u066C]*',a.get_text())
-                        if p and re.match('1+[\u066C+1+]+', p.group()):
-                            log(Plink + ' have wrong price')
-                            continue
-                    elif "قیمت هر متر" in a.get_text():
-                        p = re.search(r'\d[\d\u066C]*',a.get_text()).group()
-                        if not re.match('1+[\u066C+1+]+', p):
-                            p = p.replace('\u066C', '')
-                            price = int(p)
-                        else:
-                            price = None
-                            log(Plink + ' have wrong price')
+                p_a = buyPrice(driver)
+                price = p_a[0]
                 if not price:
                     log(Plink + ' have no price') 
                     continue
                 #get_loc
-                XY = get_loc(driver,Plink)
+                XY = get_loc(driver)
                 if not XY:
                     log(Plink + ' have no loc')
-                lat, long = XY[0], XY[1]
+                    continue
+                lat, long = XY
                 #get_Area & CYear
+                soup1 = BeautifulSoup(driver.page_source, 'html.parser')
                 a = soup1.find_all('table', class_ = "kt-group-row")[0]
                 d = a.get_text('thead').split('thead')
                 Area = d[3]
@@ -513,11 +510,9 @@ def update(landuse , ptype):
                 if not_duplicate(output):
                     insert(output)
                     insert_counter = insert_counter + 1
-                    log(str(insert_counter) + " Case inserted"+ " & "+'Case '+ str(Pcases.index(Pcase)+1) + 'th inserted')
+                    log('Case '+ str(Pcases.index(Pcase)+1) +'/'+ str(len(Pcases)) +  " & "+ str(insert_counter) + " Case inserted")
                 else: 
                     log(Plink + ' is duplicate')
-
-                
             driver.quit()
             log(landuse+', '+ptype+' UPDATED!')
         case ('com', 'rent'):
@@ -538,99 +533,64 @@ def update(landuse , ptype):
                 driver = start_driver()
                 driver.get(Plink)
                 time.sleep(5)
+                mortgage, rent = rentPrice(driver)
                 soup1 = BeautifulSoup(driver.page_source, 'html.parser')
-                log('soap1 is deffined')
                 if 'اجارهٔ دفاتر صنعتی، کشاورزی و تجاری' in soup1.find_all('span', class_= "kt-breadcrumbs__action-text")[2]:
                     log(Plink + 'indasterial Case')
-                    pass
-                else:
-                    #get_price & get_Area & get_CYear
-                    if not soup1.find_all('input' , class_= "kt-range-slider__input"):
-                        prices = soup1.find_all('div', class_ = "kt-base-row kt-base-row--large kt-unexpandable-row")
-                        for a in prices: 
-                            p = re.search(r'\d[\d\u066C]*',a.get_text())
-                            if p and re.match('1+[\u066C+1+]+', p.group()):
-                                log(Plink + ' have wrong price')
-                                continue
-                            elif not p and "ودیعه" in a.get_text() and "اجاره" in a.get_text():
-                                pass
-                            elif p and "ودیعه" in a.get_text():  
-                                p = p.group().replace('\u066C', '')
-                                mortgage = int(p)
-                            elif not p and "ودیعه" in a.get_text():
-                                    mortgage = 0
-                            elif p and "اجاره" in a.get_text():
-                                p = p.group().replace('\u066C', '')
-                                rent = int(p)
-                            elif not p and "اجاره" in a.get_text():
-                                    rent = 0
-                        FArea = soup1.find_all("table", class_= "kt-group-row")[0]
-                        F = FArea.get_text('p').split('p')
-                        for i in range(len(F)):
-                            if 'متراژ' in F[i]:
-                                Area = F[int(i+ (len(F)/2))]
-                            elif 'ساخت' in F[i]:
-                                CYear = F[int(i+(len(F)/2))]
-                    elif soup1.find_all('input' , class_= "kt-range-slider__input"):
-                        prices = soup1.find_all('td' , class_= 'kt-group-row-item kt-group-row-item__value kt-group-row-item--info-row')
-                        Area = prices[0].get_text()
-                        CYear = prices[1].get_text()
-                        unit = 0
-                        if 'میلیون' in prices[3].get_text():
-                            unit = 1000000
-                        elif 'میلیارد' in prices[3].get_text():
-                            unit = 1000000000
-                        elif 'هزار' in prices[3].get_text():
-                            unit = 1
-                        if re.search(r'(\d+\.*\d*)', prices[3].get_text()):
-                            mortgage = float(re.search(r'(\d+\.*\d*)', prices[3].get_text()).group().split(' ')[0])*unit
-                        else:
-                            mortgage = 0
-                        if 'میلیون' in prices[4].get_text():
-                            unit = 1000000
-                        elif 'میلیارد' in prices[4].get_text():
-                            unit = 1000000000
-                        elif 'هزار' in prices[4].get_text():
-                            unit = 1
-                        if re.search(r'(\d+\.*\d*)', prices[4].get_text()):
-                            rent = float(re.search(r'(\d+\.*\d*)', prices[4].get_text()).group().split(' ')[0])*unit
-                        else:
-                            rent = 0
-                    #get_loc
-                    price = (mortgage + (rent*30))/int(Area)
-                    if not price or price<0:
-                        log(Plink + ' have no price')
-                    XY = get_loc(driver,Plink)
-                    if not XY:
-                        log(Plink + ' have no loc')
-                    lat , long = XY[0],XY[1]
-                    #get_mahale1
-                    mahale_text = soup1.find_all('div', class_ = "kt-page-title__subtitle kt-page-title__subtitle--responsive-sized")[0]
-                    mahale = mahale_text.get_text().split("\u060C")[1]
-                    #get_exp
-                    exp = get_exp(soup1)
-                    #output
-                    output = {
-                        'landuse': landuse,
-                        'ptype' : ptype,
-                        'price' : price,
-                        'Area': int(Area),
-                        'CYear': CYear,
-                        'mortgage': mortgage, 
-                        'rent': rent,
-                        'lat': lat,
-                        'lon' : long, 
-                        'mahale': mahale,
-                        'exp': exp,
-                        'link' : Plink,
-                        'date_time' : datetime.datetime.today()
-                    }
-                    if not_duplicate(output):
-                        insert(output)
-                        insert_counter = insert_counter + 1
-                        log(str(insert_counter) + " Case inserted"+ " & "+'Case '+ str(Pcases.index(Pcase)+1) + 'th inserted')
-                    else: 
-                        log(Plink + ' is duplicate')
+                    continue
+               #get_price & get_Area & get_CYear
+                style = soup1.find_all('input' , class_= "kt-range-slider__input")
+                if style:
+                    prices = soup1.find_all('td' , class_= 'kt-group-row-item kt-group-row-item__value kt-group-row-item--info-row')
+                    Area = prices[0].get_text()
+                    CYear = prices[1].get_text()
+                elif not style :
+                    FArea = soup1.find_all("table", class_= "kt-group-row")[0]
+                    F = FArea.get_text('p').split('p')
+                    for i in range(len(F)):
+                        if 'متراژ' in F[i]:
+                            Area = F[int(i+ (len(F)/2))]
+                        elif 'ساخت' in F[i]:
+                            CYear = F[int(i+ (len(F)/2))]
+                if mortgage is None and rent is None:
+                    log(Plink + ' have no price')
+                    continue
+                mortgage = int(mortgage)
+                rent = int(rent)
+                price = (mortgage + (rent*30))/int(Area)
+                #get_loc
+                XY = get_loc(driver)
+                if not XY:
+                    log(Plink + ' have no loc')
+                    continue
+                lat , long = XY
+                #get_mahale1
+                mahale_text = soup1.find_all('div', class_ = "kt-page-title__subtitle kt-page-title__subtitle--responsive-sized")[0]
+                mahale = mahale_text.get_text().split("\u060C")[1]
+                #get_exp
+                exp = get_exp(soup1)
+                #output
+                output = {
+                    'landuse': landuse,
+                    'ptype' : ptype,
+                    'price' : price,
+                    'Area': int(Area),
+                    'CYear': CYear,
+                    'mortgage': mortgage, 
+                    'rent': rent,
+                    'lat': lat,
+                    'lon' : long, 
+                    'mahale': mahale,
+                    'exp': exp,
+                    'link' : Plink,
+                    'date_time' : datetime.datetime.today()
+                }
+                if not_duplicate(output):
+                    insert(output)
+                    insert_counter = insert_counter + 1
+                    log('Case '+ str(Pcases.index(Pcase)+1) +'/'+ str(len(Pcases)) +  " & "+ str(insert_counter) + " Case inserted")
+                else: 
+                    log(Plink + ' is duplicate')
             driver.quit()
             log(landuse+', '+ptype+' UPDATED!')
         case _ :
