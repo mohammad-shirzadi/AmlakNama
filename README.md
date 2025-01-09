@@ -20,7 +20,7 @@ Interactive map for data visualization and price comparison.
   - Additional metadata (e.g., location description, link to the original listing).
 
 ### 2. **Data Storage**
-- Stores collected data in an **SQLite database** for easy access and analysis.
+- Stores collected data in an **PostgereSQL(postgis) database** for easy access and analysis.
 - Includes mechanisms to prevent duplicate entries and maintain data integrity.
 
 ### 3. **Data Analysis and Visualization**
