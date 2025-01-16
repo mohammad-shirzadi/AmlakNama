@@ -31,9 +31,9 @@ Interactive map for data visualization and price comparison.
   - Region
 - Outputs visualizations as interactive HTML maps.
 
-## ScreenShots
+## ScreenShot
+![Screenshot 2025-01-16 230210](https://github.com/user-attachments/assets/7143a21f-ada8-46a3-b31a-8a2ff00ccb80)
 
-![image](https://github.com/user-attachments/assets/e0b2b0eb-e78d-4d14-806d-1ddabd66f907)
 
 
 ## Prerequisites
