@@ -84,8 +84,9 @@ DATABASES = {
     #},
     'default' : {
         'ENGINE' : 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'geodjango',
-        'PASSORD' : 'msh1377',
+        'NAME': os.environ.get('DATABASE_NAME'),
+        'USER': os.environ.get('DATABASE_USER'),
+        'PASSWORD': os.environ.get('DATABASE_PASSWORD')
     }
 }
 
