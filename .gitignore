@@ -5,6 +5,6 @@ propertyprice/__pycache__/
 updateData/shp/
 updateData/__pycache__/
 *.pyc
-.venv
+venv
 */.ipynb_checkpoints/
 
