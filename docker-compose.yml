@@ -1,16 +1,18 @@
 version: '3.4'
 
 networks:
-  defult:
-    name: 'defult'
+  default:
+    name: 'web'
 
 services:
   db:
-    image: postgres:15
+    build:
+      context: .
+      dockerfile: dockerfileDB
     environment:
-      -POSTGRES_DB : geodjango
-      -POSTGRES_USER : geodjangouser
-      -POSTGRES_PASSWORD : MSH1377
+      POSTGRES_DB: geodjango
+      POSTGRES_USER: geodjangouser
+      POSTGRES_PASSWORD: MSH13771010
     volumes:
       - POSTGRESDATA:/var/lib/postgresql/data/
   app:
@@ -25,7 +27,7 @@ services:
       - media_volume:/app/backend/media
     ports:
       - "8000:8000"
-    environment:
+    env_file:
       - .env
     depends_on:
       - db
@@ -34,6 +36,5 @@ services:
 
 volumes:
   POSTGRESDATA:
-  .:
   static_volume:
   media_volume:
