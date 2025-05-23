@@ -1,2 +1,5 @@
-## TODO delete the unvalidate data in prices database
-
+# TODO [] delete the unvalidate data in prices database
+# TODO [] define coronjob in celery for update datas 
+# TODO [] define filtering on time and data to show
+# TODO [] define way to use with many users
+#
