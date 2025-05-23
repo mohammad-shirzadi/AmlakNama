@@ -1,10 +1,8 @@
-explore/static/explore/map/myhtml.html
-log.txt
-explore/__pycache__/
-propertyprice/__pycache__/
-updateData/shp/
-updateData/__pycache__/
+__pycache__
+explore/__pycache__/*
+propertyprice/__pycache__/*
+updateData/__pycache__/*
 *.pyc
-venv
 */.ipynb_checkpoints/
 *.swp
+venv
