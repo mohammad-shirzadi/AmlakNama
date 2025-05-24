@@ -1,7 +1,6 @@
-__pycache__
-explore/__pycache__/*
-propertyprice/__pycache__/*
-updateData/__pycache__/*
+.env
+**/__pycache__/*
+**/migrations/*
 *.pyc
 */.ipynb_checkpoints/
 *.swp
