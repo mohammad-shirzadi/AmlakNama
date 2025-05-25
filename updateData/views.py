@@ -42,35 +42,35 @@ def updatePg(request):
                 update('res','rent')
                 context['log'] = "update('res','rent') is done"
             except Exception as erore:
-                log(erore+'-')
+                log(str(erore)+'-')
 
         if request.POST.get('res-buy'):
             try:
                 update('res','buy')
                 context['log'] = "update('res','buy') is done"
             except Exception as erore:
-                log(erore+'-')
+                log(str(erore)+'-')
 
         if request.POST.get('resland-buy'):
             try:
                 update('resland','buy')
                 context['log'] = "update('resland','buy') is done"
             except Exception as erore:
-                log(erore+'-')
+                log(str(erore)+'-')
 
         if request.POST.get('com-rent'):        
             try:
                 update('com','rent')
                 context['log'] = "update('com','rent') is done"
             except Exception as erore:
-                log(erore+'-')
+                log(str(erore)+'-')
 
         if request.POST.get('com-buy'):
             try:
                 update('com','buy')
                 context['log'] = "update('com','buy') is done"
             except Exception as erore:
-                log(erore+'-')
+                log(str(erore)+'-')
 
     elif request.method == 'GET':
         pass
