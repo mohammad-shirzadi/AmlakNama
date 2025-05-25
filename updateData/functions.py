@@ -103,13 +103,12 @@ def insert(output):
         log(str(error)+"---"+ str(output))
     
 def start_driver():
-
-    #if os.path.isfile(r"/home/mohammad/CS50P/propertyprice/chromedriver.txt"):
-    #    with open(r"/home/mohammad/CS50P/propertyprice/chromedriver.txt", 'r') as file:
+    #if os.path.isfile(r"chromedriver.txt"):
+    #    with open(r"chromedriver.txt", 'r') as file:
     #        PathChromeDriverManager = file.read().strip()
     #else:
     #    PathChromeDriverManager = ChromeDriverManager().install()
-    #    with open(r"/home/mohammad/CS50P/propertyprice/chromedriver.txt", 'w') as file:
+    #    with open(r"chromedriver.txt", 'w') as file:
     #        file.write(PathChromeDriverManager)
     #chrome_options = Options()
     #chrome_options.headless = True
@@ -123,7 +122,6 @@ def start_driver():
         PathECDM = EdgeChromiumDriverManager().install()
         with open(r"ECD.txt", 'w') as file:
             file.write(PathECDM)
-
     edge_options = Options()
     edge_options.add_argument("--headless=new")
     edge_options.add_argument("--disable-gpu")
@@ -133,20 +131,21 @@ def start_driver():
     return driver
 
 def PropertyCases(url, n=10):
-
     for i in range(n):
         divar = requests.get(url)
         if divar.status_code == 200:
             soup = BeautifulSoup(divar.content, 'html.parser')
-            Pcases = soup.find_all('a', class_ = "kt-post-card__action")
+            Pcases = soup.find_all('a', class_ = "unsafe-kt-post-card__action")
             if Pcases:
-                log('in %i try, Pcases found'%i)
+                log('in %i try, Pcases found' % i)
                 return Pcases
+            else:
+                log('in %i try, Pcases not found' % i)
         else:
-            log('in %i try, Pcasees not found'%i)
-            time.sleep(5)
+            log('in %i try, Pcases not found (status code: %s)' % (i, divar.status_code))
+        time.sleep(5)
 
-    raise ReferenceError('status_cod is not 200')
+    raise ReferenceError('status_code is not 200 or Pcases not found after %d tries' % n)
 
 def get_exp(soup1):
     explink = soup1.find_all('h1', class_ = "kt-page-title__title kt-page-title__title--responsive-sized")[0].get_text()
