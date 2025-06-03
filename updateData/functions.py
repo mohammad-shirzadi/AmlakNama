@@ -124,7 +124,7 @@ def start_driver():
             file.write(PathECDM)
     edge_options = Options()
     edge_options.add_argument("--headless=new")
-    edge_options.add_argument("--disable-gpu")
+    #edge_options.add_argument("--disable-gpu")
     edge_options.add_argument("--window-size=1920x1080")
     service = Service(PathECDM)
     driver = webdriver.Edge(options=edge_options, service=service)
@@ -143,7 +143,7 @@ def PropertyCases(url, n=10):
                 log('in %i try, Pcases not found' % i)
         else:
             log('in %i try, Pcases not found (status code: %s)' % (i, divar.status_code))
-        time.sleep(5)
+        time.sleep(10)
 
     raise ReferenceError('status_code is not 200 or Pcases not found after %d tries' % n)
 
@@ -152,25 +152,42 @@ def get_exp(soup1):
     explink = explink
     return explink
 
+#def get_loc(driver):
+#    try:
+#        pic = WebDriverWait(driver,10).until(
+#            EC.element_to_be_clickable((By.CLASS_NAME, "image-dbbad"))
+#        )
+#    except:
+#        log('map pic not found')
+#        return None
+#    pic.click()
+#    try: 
+#        link_element = WebDriverWait(driver, 10).until(
+#            EC.presence_of_element_located((By.CSS_SELECTOR, ".map-cm__button"))
+#        )
+#        link = link_element.get_attribute("href")
+#    except:
+#        log("balad links not found")
+#        return None
+#    (lat,long) = re.search(r"latitude=(\d*\.\d*)&longitude=(\d*\.\d*)", link).groups()
+#    x_y =[float(lat),float(long)]
+#    return x_y
+#
+
 def get_loc(driver):
-    try:
-        pic = WebDriverWait(driver,10).until(
-            EC.element_to_be_clickable((By.CLASS_NAME, "image-dbbad"))
-        )
-    except:
-        log('map pic not found')
-        return None
-    pic.click()
-    try: 
-        link_element = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, ".map-cm__button"))
-        )
-        link = link_element.get_attribute("href")
-    except:
-        log("balad links not found")
-        return None
-    (lat,long) = re.search(r"latitude=(\d*\.\d*)&longitude=(\d*\.\d*)", link).groups()
-    x_y =[float(lat),float(long)]
+    tring = 3
+    while tring > 0:
+        pr_data = str(driver.page_source)
+        lat_ = re.search(r'.*"latitude":(\d*\.\d*).*', pr_data)
+        long_ = re.search(r'.*"longitude":(\d*\.\d*).*', pr_data)
+        if lat_ and long_ :
+            (lat,) = lat_.groups()
+            (long,) = long_.groups()
+            x_y =[float(lat),float(long)]
+            return x_y
+        else:
+            tring -= 1
+            x_y = None
     return x_y
 
 
@@ -266,7 +283,7 @@ def update(landuse , ptype):
                 Plink = 'https://divar.ir'+ Pcase.get('href')
                 driver = start_driver()
                 driver.get(Plink)
-                time.sleep(5)
+                time.sleep(10)
                 #get_price
                 p_a = buyPrice(driver)
                 price = p_a[0]
@@ -332,7 +349,7 @@ def update(landuse , ptype):
                 Plink = 'https://divar.ir'+ Pcase.get('href')
                 driver = start_driver()
                 driver.get(Plink)
-                time.sleep(5)
+                time.sleep(10)
                 #get_mortgage, rent, area, yeare
                 mortgage, rent = rentPrice(driver)
                 soup1 = BeautifulSoup(driver.page_source, 'html.parser')                
@@ -407,7 +424,7 @@ def update(landuse , ptype):
                 Plink = 'https://divar.ir'+ Pcase.get('href')
                 driver = start_driver()
                 driver.get(Plink)
-                time.sleep(5)
+                time.sleep(10)
                 #get_price, area
                 soup1 = BeautifulSoup(driver.page_source, 'html.parser')
                 price, Area = buyPrice(driver)
@@ -464,7 +481,7 @@ def update(landuse , ptype):
                 Plink = 'https://divar.ir'+ Pcase.get('href')
                 driver = start_driver()
                 driver.get(Plink)
-                time.sleep(5)
+                time.sleep(10)
                 #get_price
                 p_a = buyPrice(driver)
                 price = p_a[0]
@@ -531,7 +548,7 @@ def update(landuse , ptype):
                 Plink = 'https://divar.ir'+ Pcase.get('href')
                 driver = start_driver()
                 driver.get(Plink)
-                time.sleep(5)
+                time.sleep(10)
                 mortgage, rent = rentPrice(driver)
                 soup1 = BeautifulSoup(driver.page_source, 'html.parser')
                 if 'اجارهٔ دفاتر صنعتی، کشاورزی و تجاری' in soup1.find_all('span', class_= "kt-breadcrumbs__action-text")[2]:
