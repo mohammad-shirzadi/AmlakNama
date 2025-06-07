@@ -124,7 +124,7 @@ def start_driver():
             file.write(PathECDM)
     edge_options = Options()
     edge_options.add_argument("--headless=new")
-    #edge_options.add_argument("--disable-gpu")
+    edge_options.add_argument("--disable-gpu")
     edge_options.add_argument("--window-size=1920x1080")
     service = Service(PathECDM)
     driver = webdriver.Edge(options=edge_options, service=service)
@@ -175,21 +175,15 @@ def get_exp(soup1):
 #
 
 def get_loc(driver):
-    tring = 3
-    while tring > 0:
-        pr_data = str(driver.page_source)
-        lat_ = re.search(r'.*"latitude":(\d*\.\d*).*', pr_data)
-        long_ = re.search(r'.*"longitude":(\d*\.\d*).*', pr_data)
-        if lat_ and long_ :
-            (lat,) = lat_.groups()
-            (long,) = long_.groups()
-            x_y =[float(lat),float(long)]
-            return x_y
-        else:
-            tring -= 1
-            x_y = None
+    pr_data = str(driver.page_source)
+    lat_ = re.search(r'.*"latitude":(\d*\.\d*).*', pr_data)
+    long_ = re.search(r'.*"longitude":(\d*\.\d*).*', pr_data)
+    x_y = None
+    if lat_ and long_ :
+        (lat,) = lat_.groups()
+        (long,) = long_.groups()
+        x_y =[float(lat),float(long)]
     return x_y
-
 
 def buyPrice(driver):
     soup1 = BeautifulSoup(driver.page_source, 'html.parser')
@@ -262,7 +256,6 @@ def rentPrice(driver):
         return [mortgage,rent]
 
 
-
 def update(landuse , ptype):
     log('update(%s, %s) is run'% (landuse,ptype))
     match (landuse, ptype):
@@ -283,17 +276,33 @@ def update(landuse , ptype):
                 Plink = 'https://divar.ir'+ Pcase.get('href')
                 driver = start_driver()
                 driver.get(Plink)
-                time.sleep(10)
+                time.sleep(5)
                 #get_price
                 p_a = buyPrice(driver)
                 price = p_a[0]
-                if not price:
-                    log(Plink + ' have no price')
-                    continue
                 #get_loc
-                XY = get_loc(driver)
+                XY =get_loc(driver)
+                trying = 0
+                while trying < 3 and not XY:
+                    log('intrying %i x-y not founded.' %trying)
+                    trying += 1
+                    driver.get(Plink)
+                    time.sleep(5)
+                    XY = get_loc(driver)
+                    if trying > 0 and not XY:
+                        d_tmp = start_driver()
+                        d_tmp.get(Plink)
+                        time.sleep(5)
+                        XY = get_loc(d_tmp)
+                        d_tmp.quit()
+
                 if not XY:
                     log(Plink + ' have no loc')
+                    driver.quit()
+                    continue
+                if not price:
+                    log(Plink + ' have no price')
+                    driver.quit()
                     continue
                 lat, long = XY
                 #get_Area & CYear
@@ -328,7 +337,7 @@ def update(landuse , ptype):
                     log('Case '+ str(Pcases.index(Pcase)+1) +'/'+ str(len(Pcases)) +  " & "+ str(insert_counter) + " Case inserted")
                 else: 
                     log(Plink + ' is duplicate')
-            driver.quit()
+                driver.quit()
             log(landuse+', '+ptype+' UPDATED!')
         case ('res', 'rent'):
             insert_counter = 0
