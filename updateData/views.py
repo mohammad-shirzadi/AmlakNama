@@ -2,9 +2,16 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
-from .functions import log, update,cdt
+from .services import log, update,cdt
+import threading
 
 
+def threaded_update(lu,typ):
+    try:
+        update('res','rent')
+        log(f"update('{lu}', '{typ}') is done")
+    except Exception as erore:
+        log(str(erore)+'-')
 
 @staff_member_required
 def updatePg(request):
@@ -12,7 +19,7 @@ def updatePg(request):
 
 
     def logreader():
-        with open("log.txt",'r') as file:
+        with open("log",'r') as file:
             logtxt = file.readlines()
             if not logtxt: 
                 logtxt = ['']
@@ -38,40 +45,15 @@ def updatePg(request):
     
     if request.method == 'POST':
         if request.POST.get('res-rent'):
-            try:
-                update('res','rent')
-                context['log'] = "update('res','rent') is done"
-            except Exception as erore:
-                log(str(erore)+'-')
-
+            threading.Thread(target=threaded_update,args=('res','rent')).start()
         if request.POST.get('res-buy'):
-            try:
-                update('res','buy')
-                context['log'] = "update('res','buy') is done"
-            except Exception as erore:
-                log(str(erore)+'-')
-
+            threading.Thread(target=threaded_update,args=('res','buy')).start()
         if request.POST.get('resland-buy'):
-            try:
-                update('resland','buy')
-                context['log'] = "update('resland','buy') is done"
-            except Exception as erore:
-                log(str(erore)+'-')
-
+            threading.Thread(target=threaded_update,args=('resland','buy')).start()
         if request.POST.get('com-rent'):        
-            try:
-                update('com','rent')
-                context['log'] = "update('com','rent') is done"
-            except Exception as erore:
-                log(str(erore)+'-')
-
+            threading.Thread(target=threaded_update,args=('com','rent')).start()
         if request.POST.get('com-buy'):
-            try:
-                update('com','buy')
-                context['log'] = "update('com','buy') is done"
-            except Exception as erore:
-                log(str(erore)+'-')
-
+            threading.Thread(target=threaded_update,args=('com','buy')).start()
     elif request.method == 'GET':
         pass
 
