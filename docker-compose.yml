@@ -18,7 +18,8 @@ services:
   app:
     build: .
     command: >
-      sh -c "python manage.py makemigrations &&
+      sh -c "dpkg -i microsoft-edge-stable_136.0.3240.92-1_amd64.deb"
+             python manage.py makemigrations &&
              python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000"
     volumes:
