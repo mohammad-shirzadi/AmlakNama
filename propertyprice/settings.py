@@ -10,18 +10,20 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
-from pathlib import Path
 import os
+from dotenv import load_dotenv
+from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+load_dotenv(dotenv_path=BASE_DIR / '.env')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure--(n7s=hh0p48&)+z$tqxdxt*3+p^+^9r)r2h=^f4f!l6$1j7xe'
+#SECRET_KEY = 'django-insecure--(n7s=hh0p48&)+z$tqxdxt*3+p^+^9r)r2h=^f4f!l6$1j7xe'
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -84,8 +86,11 @@ DATABASES = {
     #},
     'default' : {
         'ENGINE' : 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'geodjango',
-        'PASSORD' : 'msh1377',
+        'NAME': os.environ.get('DATABASE_NAME'),
+        'USER': os.environ.get('DATABASE_USER'),
+        'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
+        'HOST': os.environ.get('DATABASE_HOST'),
+        'PORT':os.environ.get('DATABASE_PORT')
     }
 }
 

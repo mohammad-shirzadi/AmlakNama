@@ -1,0 +1,41 @@
+version: '3.4'
+
+networks:
+  default:
+    name: 'web'
+
+services:
+  db:
+    build:
+      context: .
+      dockerfile: dockerfileDB
+    environment:
+      POSTGRES_DB: geodjango
+      POSTGRES_USER: geodjangouser
+      POSTGRES_PASSWORD: MSH13771010
+    volumes:
+      - POSTGRESDATA:/var/lib/postgresql/data/
+  app:
+    build: .
+    command: >
+      sh -c "dpkg -i microsoft-edge-stable_136.0.3240.92-1_amd64.deb"
+             python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app/backend/backend_api
+      - static_volume:/app/backend/staticfiles
+      - media_volume:/app/backend/media
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+
+
+volumes:
+  POSTGRESDATA:
+  static_volume:
+  media_volume:

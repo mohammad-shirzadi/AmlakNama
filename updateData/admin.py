@@ -7,7 +7,7 @@ from django.contrib.admin import AdminSite
 from django.http import HttpResponse
 from updateData import views
 #from updateData.models import pointshp
-
+from .services import log
 
 import geopandas
 import shapely
@@ -19,12 +19,6 @@ import sqlite3
 @admin.action(description='create shpfiles')
 def makeshape(modeladmin, request, queryset):
     #deffine point
-    def log(a):
-        global LOG
-        LOG = str(datetime.datetime.today())+ ':   ' + a + '\n'
-        with open('log.txt', 'a') as logfile:
-            logfile.write(LOG)
-        return LOG
 
     def create_point(queryset):
         all_data = queryset
