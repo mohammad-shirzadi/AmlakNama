@@ -8,7 +8,7 @@ services:
   db:
     build:
       context: .
-      dockerfile: dockerfileDB
+      dockerfile: docker/dockerfileDB
     environment:
       POSTGRES_DB: geodjango
       POSTGRES_USER: geodjangouser
@@ -16,7 +16,9 @@ services:
     volumes:
       - POSTGRESDATA:/var/lib/postgresql/data/
   app:
-    build: .
+    build: 
+      context: .
+      dockerfile: docker/dockerfile
     command: >
       sh -c "dpkg -i microsoft-edge-stable_136.0.3240.92-1_amd64.deb"
              python manage.py makemigrations &&
