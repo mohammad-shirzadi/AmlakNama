@@ -22,11 +22,11 @@ load_dotenv(dotenv_path=BASE_DIR / '.env')
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-#SECRET_KEY = 'django-insecure--(n7s=hh0p48&)+z$tqxdxt*3+p^+^9r)r2h=^f4f!l6$1j7xe'
+# SECRET_KEY = 'django-insecure--(n7s=hh0p48&)+z$tqxdxt*3+p^+^9r)r2h=^f4f!l6$1j7xe'
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG",default=True)
 
 ALLOWED_HOSTS = []
 
@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     'updateData.apps.UpdatedataConfig',
     'explore.apps.ExploreConfig',
+    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -120,7 +121,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'Asia/Tehran'
+TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
@@ -138,3 +139,7 @@ STATICFILE_DIRS = os.path.join(BASE_DIR, 'static')
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+from celery import *
+from redis import *
