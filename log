@@ -1,0 +1,20 @@
+2025-07-01 09:41:55,947: Watching for file changes with StatReloader
+2025-07-01 09:42:12,014: update(com, buy) is run
+2025-07-01 09:42:12,347: in 0 try, Pcases not found
+2025-07-01 09:42:22,703: in 1 try, Pcases found
+2025-07-01 09:42:22,703: get22 Pcasses
+2025-07-01 09:42:23,199: driver started
+2025-07-01 09:42:23,200: driver start get link
+2025-07-01 09:44:23,300: HTTPConnectionPool(host='localhost', port=41621): Read timed out. (read timeout=120)-
+2025-07-01 09:45:13,812: /home/mohammad/w/AmlakNama/updateData/services.py changed, reloading.
+2025-07-01 09:45:24,965: Watching for file changes with StatReloader
+2025-07-01 09:45:34,252: /home/mohammad/w/AmlakNama/updateData/services.py changed, reloading.
+2025-07-01 09:45:35,293: Watching for file changes with StatReloader
+2025-07-01 09:45:42,260: Watching for file changes with StatReloader
+2025-07-01 10:11:45,269: update(com, buy) is run
+2025-07-01 10:11:45,478: in 0 try, Pcases found
+2025-07-01 10:11:45,479: get22 Pcasses
+2025-07-01 10:11:45,990: driver started
+2025-07-01 10:11:45,990: driver start get link
+2025-07-01 10:11:45,990: https://divar.ir/v/%D9%81%D8%B1%D9%88%D8%B4-%D9%85%D8%BA%D8%A7%D8%B2%D9%87-%DB%B6%DB%B0-%D9%85%D8%AA%D8%B1%DB%8C-%D8%AF%D8%B1-%D8%A8%D8%A7%D8%B2%D8%A7%D8%B1/AaExQmDJ
+2025-07-01 10:13:46,091: HTTPConnectionPool(host='localhost', port=46945): Read timed out. (read timeout=120)-
