@@ -3,15 +3,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
 from .services import log, update,cdt
-import threading
 
-
-def threaded_update(lu,typ):
-    try:
-        update('res','rent')
-        log(f"update('{lu}', '{typ}') is done")
-    except Exception as erore:
-        log(str(erore)+'-')
 
 @staff_member_required
 def updatePg(request):
@@ -45,18 +37,40 @@ def updatePg(request):
     
     if request.method == 'POST':
         if request.POST.get('res-rent'):
-            threading.Thread(target=threaded_update,args=('res','rent')).start()
+            try:
+                update('res','rent')
+                context['log'] = "update('res','rent') is done"
+            except Exception as erore:
+                log(str(erore)+'-')
         if request.POST.get('res-buy'):
-            threading.Thread(target=threaded_update,args=('res','buy')).start()
+            try:
+                update('res','buy')
+                context['log'] = "update('res','buy') is done"
+            except Exception as erore:
+                log(str(erore)+'-')
+
         if request.POST.get('resland-buy'):
-            threading.Thread(target=threaded_update,args=('resland','buy')).start()
+            try:
+                update('resland','buy')
+                context['log'] = "update('resland','buy') is done"
+            except Exception as erore:
+                log(str(erore)+'-')
+
         if request.POST.get('com-rent'):        
-            threading.Thread(target=threaded_update,args=('com','rent')).start()
+            try:
+                update('com','rent')
+                context['log'] = "update('com','rent') is done"
+            except Exception as erore:
+                log(str(erore)+'-')
+
         if request.POST.get('com-buy'):
-            threading.Thread(target=threaded_update,args=('com','buy')).start()
+            try:
+                update('com','buy')
+                context['log'] = "update('com','buy') is done"
+            except Exception as erore:
+                log(str(erore)+'-')
     elif request.method == 'GET':
         pass
-
     return render(request,'admin/updatePg.html', context)
 
 
