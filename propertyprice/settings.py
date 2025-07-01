@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     'updateData.apps.UpdatedataConfig',
     'explore.apps.ExploreConfig',
+    'tasks.apps.TasksConfig',
     'django_celery_results',
 ]
 
