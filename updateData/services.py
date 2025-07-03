@@ -98,8 +98,8 @@ def start_driver(browser='edge'):
 
 
 #GET_ADV_DATA
-def get_loc(driver):
-    pr_data = str(driver.page_source)
+def get_loc(page_source):
+    pr_data = str(page_source)
     lat_ = re.search(r'.*"latitude":(\d*\.\d*).*', pr_data)
     long_ = re.search(r'.*"longitude":(\d*\.\d*).*', pr_data)
     x_y = None
@@ -109,8 +109,8 @@ def get_loc(driver):
         x_y =[float(lat),float(long)]
     return x_y
 
-def get_buyPrice(driver):
-    soup1 = BeautifulSoup(driver.page_source, 'html.parser')
+def get_buyPrice(page_source):
+    soup1 = BeautifulSoup(page_source, 'html.parser')
     prices = soup1.find_all('div', class_ = "kt-base-row kt-base-row--large kt-unexpandable-row")
     price = None
     Area = None
@@ -128,8 +128,8 @@ def get_buyPrice(driver):
             Area = int(p)
     return [price, Area]
 
-def get_rentPrice(driver):
-    soup1 = BeautifulSoup(driver.page_source, 'html.parser')
+def get_rentPrice(page_source):
+    soup1 = BeautifulSoup(page_source, 'html.parser')
     prices = soup1.find_all('div', class_ = "kt-base-row kt-base-row--large kt-unexpandable-row")
     mortgage = None
     rent = None
@@ -179,14 +179,14 @@ def get_rentPrice(driver):
     
         return [mortgage,rent]
     
-def get_district(driver):
-    soup1 = BeautifulSoup(driver.page_source, 'html.parser')
+def get_district(page_source):
+    soup1 = BeautifulSoup(page_source, 'html.parser')
     mahale_text = soup1.find_all('div', class_ = "kt-page-title__subtitle kt-page-title__subtitle--responsive-sized")[0]
     mahale = mahale_text.get_text().split("\u060C")[1]
     return mahale
 
-def get_exp(driver):
-    soup1 = BeautifulSoup(driver.page_source, 'html.parser')
+def get_exp(page_source):
+    soup1 = BeautifulSoup(page_source, 'html.parser')
     explink = soup1.find_all('h1', class_ = "kt-page-title__title kt-page-title__title--responsive-sized")[0].get_text()
     explink = explink
     return explink
@@ -213,10 +213,17 @@ def retry_get_data(retry:int, function,Plink: str):
     while retry > 0 and not result:
         log('in retrying %i x-y not founded.' %retry)
         retry -= 1
-        with start_driver() as tmp_driver:
-            tmp_driver.get(Plink)
-            time.sleep(5)
-            result = function(tmp_driver)
+        dr = start_driver()
+        log("retry driver started...")
+        dr.get(Plink)
+        log("retry get linked...")
+        time.sleep(2)
+        tmp_pgs = dr.page_source 
+        result = function(tmp_pgs)
+        log(result)
+        if not result:
+            dr.quit()
+    dr.quit()
     return result
 
 
@@ -272,16 +279,18 @@ def update(landuse, ptype):
             insert_counter = 0
             Pcases = get_PropertyCases(grdict['url'])
             log('get'+ str(len(Pcases)) +' Pcasses')
-            driver = start_driver()        
-            log("driver started")
             for Pcase in Pcases:
                 Plink = 'https://divar.ir'+ Pcase.get('href')
-                log('driver start get link')
-                log(Plink)
-                driver.get(Plink)
-                log('driver gone link')
-                time.sleep(5)
-                xy = get_loc(driver)
+                r = requests.get(Plink)
+                if r.status_code != 200:
+                    for i in range(5):
+                        r = requests.get(Plink)
+                        if r.status_code == 200:
+                            break 
+                page_source = r.content
+                time.sleep(2)
+                log("get loc started...")
+                xy = get_loc(page_source)
                 #retry
                 if not xy:
                     log('get_loc retry is running...')
@@ -294,10 +303,10 @@ def update(landuse, ptype):
                     rent = mortgage = 0
                     if field['find_key']['buy_price'] == 'price':
                         log('get_buyprice running...')
-                        price = get_buyPrice(driver)[0]
+                        price = get_buyPrice(page_source)[0]
                         log('get_buyprice done...')
                         opt = field['find_key']['findall']
-                        soup1 = BeautifulSoup(driver.page_source, 'html.parser')
+                        soup1 = BeautifulSoup(page_source, 'html.parser')
                         data = (soup1.find_all(opt[0],class_ = opt[1])[opt[2]]).get_text('thead').split('thead')
                         Area = data[3]
                         CYear = data[4]
@@ -305,15 +314,15 @@ def update(landuse, ptype):
 
                     elif field['find_key']['buy_price'] == 'price_area':
                         log('get_buyprice running...')
-                        price, Area = get_buyPrice(driver)
+                        price, Area = get_buyPrice(page_source)
                         CYear = 0
                         log('get_buyprice done...')
 
                 elif 'rent_price' in field['find_key']:
                     log('get_rentprice running...')
-                    mortgage, rent = get_rentPrice(driver)
+                    mortgage, rent = get_rentPrice(page_source)
                     log('get_rentprice done...')
-                    soup1 = BeautifulSoup(driver.page_source, 'html.parser')
+                    soup1 = BeautifulSoup(page_source, 'html.parser')
                     opt = field['find_key']
 
                     if 'اجارهٔ دفاتر صنعتی، کشاورزی و تجاری' in soup1.find_all('span', class_= "kt-breadcrumbs__action-text")[2]:
@@ -349,7 +358,7 @@ def update(landuse, ptype):
                     'landuse': landuse,             'ptype' : ptype,        'price' : price,
                     'Area': int(Area),              'CYear': CYear ,        'mortgage': mortgage,
                     'rent': rent,                   'lat': xy[0],           'lon' : xy[1],
-                    'mahale': get_district(driver), 'exp': get_exp(driver), 'link' : Plink,
+                    'mahale': get_district(page_source), 'exp': get_exp(page_source), 'link' : Plink,
                     'date_time' : datetime.today()
                 }
                 log('output create...')
@@ -359,7 +368,6 @@ def update(landuse, ptype):
                     log(f"[{landuse}- {ptype}] Case {str(Pcases.index(Pcase)+1)}/{str(len(Pcases))} & {str(insert_counter)} Case inserted")
                 else: 
                     log(Plink + ' is duplicate')
-            driver.close()
             log(landuse+', '+ptype+' UPDATED!')
 
 def cdt(lu, typ):
