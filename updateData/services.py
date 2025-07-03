@@ -273,102 +273,105 @@ def insert(propertyModel,output):
 #GET_DATA_UPDATE
 def update(landuse, ptype):
     log('update(%s, %s) is run'% (landuse,ptype))
-    for grdict in GRAND_DICT:
-        if grdict["landuse"] == landuse and grdict["ptype"] == ptype:
-            field = grdict['propertises']
-            insert_counter = 0
-            Pcases = get_PropertyCases(grdict['url'])
-            log('get'+ str(len(Pcases)) +' Pcasses')
-            for Pcase in Pcases:
-                Plink = 'https://divar.ir'+ Pcase.get('href')
-                r = requests.get(Plink)
-                if r.status_code != 200:
-                    for i in range(5):
-                        r = requests.get(Plink)
-                        if r.status_code == 200:
-                            break 
-                page_source = r.content
-                time.sleep(2)
-                log("get loc started...")
-                xy = get_loc(page_source)
-                #retry
-                if not xy:
-                    log('get_loc retry is running...')
-                    xy = retry_get_data(3,get_loc,Plink)
-                if not xy:
-                    log(Plink + ' have no loc')
-                    continue
-                log('loc found...')
-                if 'buy_price' in field['find_key']:
-                    rent = mortgage = 0
-                    if field['find_key']['buy_price'] == 'price':
-                        log('get_buyprice running...')
-                        price = get_buyPrice(page_source)[0]
-                        log('get_buyprice done...')
-                        opt = field['find_key']['findall']
-                        soup1 = BeautifulSoup(page_source, 'html.parser')
-                        data = (soup1.find_all(opt[0],class_ = opt[1])[opt[2]]).get_text('thead').split('thead')
-                        Area = data[3]
-                        CYear = data[4]
-                        log('Area and CYear founded')
-
-                    elif field['find_key']['buy_price'] == 'price_area':
-                        log('get_buyprice running...')
-                        price, Area = get_buyPrice(page_source)
-                        CYear = 0
-                        log('get_buyprice done...')
-
-                elif 'rent_price' in field['find_key']:
-                    log('get_rentprice running...')
-                    mortgage, rent = get_rentPrice(page_source)
-                    log('get_rentprice done...')
-                    soup1 = BeautifulSoup(page_source, 'html.parser')
-                    opt = field['find_key']
-
-                    if 'اجارهٔ دفاتر صنعتی، کشاورزی و تجاری' in soup1.find_all('span', class_= "kt-breadcrumbs__action-text")[2]:
-                        log(Plink + 'indasterial Case')
+    try:
+        for grdict in GRAND_DICT:
+            if grdict["landuse"] == landuse and grdict["ptype"] == ptype:
+                field = grdict['propertises']
+                insert_counter = 0
+                Pcases = get_PropertyCases(grdict['url'])
+                log('get'+ str(len(Pcases)) +' Pcasses')
+                for Pcase in Pcases:
+                    Plink = 'https://divar.ir'+ Pcase.get('href')
+                    r = requests.get(Plink)
+                    if r.status_code != 200:
+                        for i in range(5):
+                            r = requests.get(Plink)
+                            if r.status_code == 200:
+                                break 
+                    page_source = r.content
+                    time.sleep(2)
+                    log("get loc started...")
+                    xy = get_loc(page_source)
+                    #retry
+                    if not xy:
+                        log('get_loc retry is running...')
+                        xy = retry_get_data(3,get_loc,Plink)
+                    if not xy:
+                        log(Plink + ' have no loc')
                         continue
+                    log('loc found...')
+                    if 'buy_price' in field['find_key']:
+                        rent = mortgage = 0
+                        if field['find_key']['buy_price'] == 'price':
+                            log('get_buyprice running...')
+                            price = get_buyPrice(page_source)[0]
+                            log('get_buyprice done...')
+                            opt = field['find_key']['findall']
+                            soup1 = BeautifulSoup(page_source, 'html.parser')
+                            data = (soup1.find_all(opt[0],class_ = opt[1])[opt[2]]).get_text('thead').split('thead')
+                            Area = data[3]
+                            CYear = data[4]
+                            log('Area and CYear founded')
 
-                    #get_price & get_Area & get_CYear
-                    style = soup1.find_all(opt['style_findall'][0] , class_= opt['style_findall'][1])
-                    if style:
-                        log('style founded...')
-                        prices = soup1.find_all(opt['styled_findall'][0] , class_= opt['styled_findall'][1])
-                        Area = prices[0].get_text()
-                        CYear = prices[1].get_text()
-                    elif not style:
-                        log('style not found...')
-                        FArea = soup1.find_all(opt['notstyled_findall'][0], class_= opt['notstyled_findall'][1])[opt['notstyled_findall'][2]]
-                        F = FArea.get_text('p').split('p')
-                        for i in range(len(F)):
-                            if 'متراژ' in F[i]:
-                                Area = F[int(i+ (len(F)/2))]
-                            elif 'ساخت' in F[i]:
-                                CYear = F[int(i+ (len(F)/2))]
-                    if mortgage is None and rent is None:
+                        elif field['find_key']['buy_price'] == 'price_area':
+                            log('get_buyprice running...')
+                            price, Area = get_buyPrice(page_source)
+                            CYear = 0
+                            log('get_buyprice done...')
+
+                    elif 'rent_price' in field['find_key']:
+                        log('get_rentprice running...')
+                        mortgage, rent = get_rentPrice(page_source)
+                        log('get_rentprice done...')
+                        soup1 = BeautifulSoup(page_source, 'html.parser')
+                        opt = field['find_key']
+
+                        if 'اجارهٔ دفاتر صنعتی، کشاورزی و تجاری' in soup1.find_all('span', class_= "kt-breadcrumbs__action-text")[2]:
+                            log(Plink + 'indasterial Case')
+                            continue
+
+                        #get_price & get_Area & get_CYear
+                        style = soup1.find_all(opt['style_findall'][0] , class_= opt['style_findall'][1])
+                        if style:
+                            log('style founded...')
+                            prices = soup1.find_all(opt['styled_findall'][0] , class_= opt['styled_findall'][1])
+                            Area = prices[0].get_text()
+                            CYear = prices[1].get_text()
+                        elif not style:
+                            log('style not found...')
+                            FArea = soup1.find_all(opt['notstyled_findall'][0], class_= opt['notstyled_findall'][1])[opt['notstyled_findall'][2]]
+                            F = FArea.get_text('p').split('p')
+                            for i in range(len(F)):
+                                if 'متراژ' in F[i]:
+                                    Area = F[int(i+ (len(F)/2))]
+                                elif 'ساخت' in F[i]:
+                                    CYear = F[int(i+ (len(F)/2))]
+                        if mortgage is None and rent is None:
+                            log(Plink + ' have no price')
+                            continue
+                        price = int((mortgage + (rent*30))/int(Area))
+                        log('price found')
+                    if not price:
                         log(Plink + ' have no price')
                         continue
-                    price = int((mortgage + (rent*30))/int(Area))
-                    log('price found')
-                if not price:
-                    log(Plink + ' have no price')
-                    continue
-                log('get data done...')
-                output = {
-                    'landuse': landuse,             'ptype' : ptype,        'price' : price,
-                    'Area': int(Area),              'CYear': CYear ,        'mortgage': mortgage,
-                    'rent': rent,                   'lat': xy[0],           'lon' : xy[1],
-                    'mahale': get_district(page_source), 'exp': get_exp(page_source), 'link' : Plink,
-                    'date_time' : datetime.today()
-                }
-                log('output create...')
-                if not_duplicate(propertyModel,output):
-                    insert(propertyModel,output)
-                    insert_counter = insert_counter + 1
-                    log(f"[{landuse}- {ptype}] Case {str(Pcases.index(Pcase)+1)}/{str(len(Pcases))} & {str(insert_counter)} Case inserted")
-                else: 
-                    log(Plink + ' is duplicate')
-            log(landuse+', '+ptype+' UPDATED!')
+                    log('get data done...')
+                    output = {
+                        'landuse': landuse,             'ptype' : ptype,        'price' : price,
+                        'Area': int(Area),              'CYear': CYear ,        'mortgage': mortgage,
+                        'rent': rent,                   'lat': xy[0],           'lon' : xy[1],
+                        'mahale': get_district(page_source), 'exp': get_exp(page_source), 'link' : Plink,
+                        'date_time' : datetime.today()
+                    }
+                    log('output create...')
+                    if not_duplicate(propertyModel,output):
+                        insert(propertyModel,output)
+                        insert_counter = insert_counter + 1
+                        log(f"[{landuse}- {ptype}] Case {str(Pcases.index(Pcase)+1)}/{str(len(Pcases))} & {str(insert_counter)} Case inserted")
+                    else: 
+                        log(Plink + ' is duplicate')
+                log(landuse+', '+ptype+' UPDATED!')
+    except Exception as ex:
+        log(ex)
 
 def cdt(lu, typ):
     if propertyModel.objects.filter(landuse=lu,ptype= typ):
