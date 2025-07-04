@@ -14,6 +14,8 @@ from  bs4 import BeautifulSoup
 from selenium import webdriver
 
 
+RETRY_SLEEP_TIME = 5 
+RETRY = 5
 GRAND_DICT = [
     {"landuse":"res", "ptype":"buy", "url":"https://divar.ir/s/tehran/buy-apartment",
      "propertises":{'landuse':"res",'ptype':"buy",
@@ -99,10 +101,14 @@ def start_driver(browser='edge'):
 
 #GET_ADV_DATA
 def get_loc(page_source):
+    log("get_loc started..")
     pr_data = str(page_source)
+    log("pr_data is loded")
     lat_ = re.search(r'.*"latitude":(\d*\.\d*).*', pr_data)
     long_ = re.search(r'.*"longitude":(\d*\.\d*).*', pr_data)
+    log("get_loc re serached")
     x_y = None
+    log((lat_, long_))
     if lat_ and long_ :
         (lat,) = lat_.groups()
         (long,) = long_.groups()
@@ -191,7 +197,7 @@ def get_exp(page_source):
     explink = explink
     return explink
 
-def get_PropertyCases(url, n=10):
+def get_PropertyCases(url, n=RETRY):
     for i in range(n):
         divar = requests.get(url)
         if divar.status_code == 200:
@@ -204,12 +210,12 @@ def get_PropertyCases(url, n=10):
                 log('in %i try, Pcases not found' % i)
         else:
             log('in %i try, Pcases not found (status code: %s)' % (i, divar.status_code))
-        time.sleep(10)
-
+        time.sleep(RETRY_SLEEP_TIME)
     raise ReferenceError('status_code is not 200 or Pcases not found after %d tries' % n)
 
-def retry_get_data(retry:int, function,Plink: str):
+def retry_get_data(function,Plink):
     result = None
+    retry = RETRY
     while retry > 0 and not result:
         log('in retrying %i x-y not founded.' %retry)
         retry -= 1
@@ -217,7 +223,8 @@ def retry_get_data(retry:int, function,Plink: str):
         log("retry driver started...")
         dr.get(Plink)
         log("retry get linked...")
-        time.sleep(2)
+        time.sleep(RETRY_SLEEP_TIME)
+        log(F'{RETRY_SLEEP_TIME}sec later')
         tmp_pgs = dr.page_source 
         result = function(tmp_pgs)
         log(result)
@@ -273,13 +280,13 @@ def insert(propertyModel,output):
 #GET_DATA_UPDATE
 def update(landuse, ptype):
     log('update(%s, %s) is run'% (landuse,ptype))
-    try:
-        for grdict in GRAND_DICT:
-            if grdict["landuse"] == landuse and grdict["ptype"] == ptype:
-                field = grdict['propertises']
-                insert_counter = 0
-                Pcases = get_PropertyCases(grdict['url'])
-                log('get'+ str(len(Pcases)) +' Pcasses')
+    for grdict in GRAND_DICT:
+        if grdict["landuse"] == landuse and grdict["ptype"] == ptype:
+            field = grdict['propertises']
+            insert_counter = 0
+            Pcases = get_PropertyCases(grdict['url'])
+            log('get'+ str(len(Pcases)) +' Pcasses')
+            try:
                 for Pcase in Pcases:
                     Plink = 'https://divar.ir'+ Pcase.get('href')
                     r = requests.get(Plink)
@@ -295,7 +302,7 @@ def update(landuse, ptype):
                     #retry
                     if not xy:
                         log('get_loc retry is running...')
-                        xy = retry_get_data(3,get_loc,Plink)
+                        xy = retry_get_data(get_loc,Plink)
                     if not xy:
                         log(Plink + ' have no loc')
                         continue
@@ -370,8 +377,8 @@ def update(landuse, ptype):
                     else: 
                         log(Plink + ' is duplicate')
                 log(landuse+', '+ptype+' UPDATED!')
-    except Exception as ex:
-        log(ex)
+            except Exception as ex:
+                log(ex)
 
 def cdt(lu, typ):
     if propertyModel.objects.filter(landuse=lu,ptype= typ):
