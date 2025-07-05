@@ -15,7 +15,7 @@ from selenium import webdriver
 
 
 
-
+STOPSIGN = True
 DRIVER_TIMEOUT = 30
 RETRY_SLEEP_TIME = 5 
 RETRY = 3
@@ -60,6 +60,7 @@ GRAND_DICT = [
 logging.basicConfig(filename='log', level=logging.INFO, format='%(asctime)s: %(message)s')
 def log(message):
     logging.info(message)
+
 
 #SELENIUM_DRIVER
 def start_driver(browser='edge',DRIVER_TIMEOUT=60):
@@ -258,7 +259,6 @@ def retry_get_data(function, Plink, retry=RETRY, driver=True):
     return result
 
 
-
 #INSERT_TO_DB
 def not_duplicate(propertyModel,output):
     if propertyModel.objects.filter(
@@ -303,9 +303,13 @@ def insert(propertyModel,output):
 
 #GET_DATA_UPDATE
 def update(landuse, ptype):
+    global STOPSIGN 
+    STOPSIGN = False
     log('update(%s, %s) is run'% (landuse,ptype))
     for grdict in GRAND_DICT:
         if grdict["landuse"] == landuse and grdict["ptype"] == ptype:
+            if STOPSIGN:
+                break
             field = grdict['propertises']
             insert_counter = 0
             Pcases = get_PropertyCases(grdict['url'])
@@ -318,6 +322,8 @@ def update(landuse, ptype):
             log('get'+ str(len(Pcases)) +' Pcasses')
 
             for Pcase in Pcases:
+                if STOPSIGN:
+                    break
                 try:
                     Plink = 'https://divar.ir'+ Pcase.get('href')
                     PcaseResponse = get_Pcases(Plink)
@@ -533,3 +539,7 @@ def makeshape(modeladmin, request, queryset):
     Insert()
 
 
+#STOP UPDATE
+def stop_update():
+    global STOPSIGN
+    STOPSIGN = True
