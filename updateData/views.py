@@ -10,51 +10,24 @@ from .services import log, logreader, update, cdt, stop_update, STOPSIGN
 def updatePg(request):
     #TODO create variable that show the upadate is running and stope whene html closed(?!) 
     global STOPSIGN
+    STOPSIGN = False
 
-    if request.method == 'POST':
-        log(request.POST)
-
+    if request.method == 'POST' and request.POST.get('land_typ'):
+        land_types = request.POST.getlist('land_typ')
+        for land_typ in land_types:
+            [land, typ] = land_typ.split('-')
+            try:
+                update(land, typ)
+                log(f"update('{land}','{typ}') is done")
+            except Exception as ex:
+                log(str(ex)+'----')
+        
         STOPSIGN = False
 
-        if request.POST.get('LogKey'):
-            return JsonResponse({'log': logreader()})
-        
-        if request.POST.get('res-rent'):
-            try:
-                update('res','rent')
-                context['log'] = "update('res','rent') is done"
-            except Exception as erore:
-                log(str(erore)+'-')
-        
-        if request.POST.get('res-buy'):
-            try:
-                update('res','buy')
-                context['log'] = "update('res','buy') is done"
-            except Exception as erore:
-                log(str(erore)+'-')
+    elif request.method == 'POST' and request.POST.get('LogKey'):
+            return JsonResponse({'log': logreader()})       
 
-        if request.POST.get('resland-buy'):
-            try:
-                update('resland','buy')
-                context['log'] = "update('resland','buy') is done"
-            except Exception as erore:
-                log(str(erore)+'-')
-
-        if request.POST.get('com-rent'):        
-            try:
-                update('com','rent')
-                context['log'] = "update('com','rent') is done"
-            except Exception as erore:
-                log(str(erore)+'-')
-
-        if request.POST.get('com-buy'):
-            try:
-                update('com','buy')
-                context['log'] = "update('com','buy') is done"
-            except Exception as erore:
-                log(str(erore)+'-')
     elif request.method == 'GET':
-        STOPSIGN = False
         pass
 
     context = {
@@ -73,8 +46,10 @@ def updatePg(request):
     return render(request,'admin/updatePg.html', context)
 
 
+
+@staff_member_required
 def stop_updatePg(request):
     print(request.POST)
     if request.POST.get('stop'):
         stop_update()
-        return render(request,'admin/updatePg.html')
+    return render(request,'admin/updatePg.html')
