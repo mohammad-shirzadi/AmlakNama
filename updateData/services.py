@@ -14,11 +14,11 @@ from  bs4 import BeautifulSoup
 from selenium import webdriver
 
 
-
-STOPSIGN = True
+STOPSIGN = False
 DRIVER_TIMEOUT = 30
 RETRY_SLEEP_TIME = 5 
 RETRY = 3
+
 GRAND_DICT = [
     {"landuse":"res", "ptype":"buy", "url":"https://divar.ir/s/tehran/buy-apartment",
      "propertises":{'landuse':"res",'ptype':"buy",
@@ -61,6 +61,12 @@ logging.basicConfig(filename='log', level=logging.INFO, format='%(asctime)s: %(m
 def log(message):
     logging.info(message)
 
+def logreader():
+    with open("log",'r') as file:
+        logtxt = file.readlines()
+        if not logtxt: 
+            logtxt = ['']
+        return logtxt[-1]
 
 #SELENIUM_DRIVER
 def start_driver(browser='edge',DRIVER_TIMEOUT=60):
@@ -223,9 +229,11 @@ def get_Pcases(Plink):
         return None
 
 def retry_get_data(function, Plink, retry=RETRY, driver=True):
+    global STOPSIGN 
     result = None
+
     if driver:
-        while retry > 0 and not result:
+        while retry > 0 and not result and not STOPSIGN:
             log('in retrying %i result not founded.' %(RETRY-retry))
             retry -= 1
             dr = start_driver()
@@ -237,15 +245,12 @@ def retry_get_data(function, Plink, retry=RETRY, driver=True):
                 log(F'{RETRY_SLEEP_TIME}sec later')
                 tmp_pgs = dr.page_source 
                 result = function(tmp_pgs)
-                log(result)
+                dr.quit()
             except Exception as ex:
                 log((ex, Plink))
                 continue
-            if not result:
-                dr.quit()
-        dr.quit()
     else:
-        while retry > 0 and not result:
+        while retry > 0 and not result and not STOPSIGN:
             log('in retrying %i result not founded.' %(RETRY-retry))
             retry -= 1
             try:
@@ -304,12 +309,12 @@ def insert(propertyModel,output):
 #GET_DATA_UPDATE
 def update(landuse, ptype):
     global STOPSIGN 
-    STOPSIGN = False
-    log('update(%s, %s) is run'% (landuse,ptype))
+    log('update(%s, %s) is run.'% (landuse,ptype))
     for grdict in GRAND_DICT:
         if grdict["landuse"] == landuse and grdict["ptype"] == ptype:
             if STOPSIGN:
-                break
+                log('update(%s, %s) is stopped.'% (landuse,ptype))
+                return None
             field = grdict['propertises']
             insert_counter = 0
             Pcases = get_PropertyCases(grdict['url'])
@@ -323,7 +328,8 @@ def update(landuse, ptype):
 
             for Pcase in Pcases:
                 if STOPSIGN:
-                    break
+                    log('update(%s, %s) is stopped.'% (landuse,ptype))
+                    return None
                 try:
                     Plink = 'https://divar.ir'+ Pcase.get('href')
                     PcaseResponse = get_Pcases(Plink)
@@ -543,3 +549,4 @@ def makeshape(modeladmin, request, queryset):
 def stop_update():
     global STOPSIGN
     STOPSIGN = True
+    log("stop func is calling...")
