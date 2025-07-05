@@ -3,19 +3,22 @@ from django.contrib import admin
 from pathlib import Path
 from django.contrib.gis.utils import LayerMapping
 from explore.models import MTPPolygon
+from django.utils import timezone
 
 import logging
 import os
 import re
 import requests
 import time
-from datetime import datetime
 from  bs4 import BeautifulSoup
 from selenium import webdriver
 
 
+
+
+DRIVER_TIMEOUT = 30
 RETRY_SLEEP_TIME = 5 
-RETRY = 5
+RETRY = 3
 GRAND_DICT = [
     {"landuse":"res", "ptype":"buy", "url":"https://divar.ir/s/tehran/buy-apartment",
      "propertises":{'landuse':"res",'ptype':"buy",
@@ -49,14 +52,17 @@ GRAND_DICT = [
                     }},
 ]
 
+
+
+
+
 #LOG
 logging.basicConfig(filename='log', level=logging.INFO, format='%(asctime)s: %(message)s')
 def log(message):
     logging.info(message)
 
-
 #SELENIUM_DRIVER
-def start_driver(browser='edge'):
+def start_driver(browser='edge',DRIVER_TIMEOUT=60):
     if browser == 'chrome':
 
         from selenium.webdriver.chrome.service import Service as ch_Service
@@ -95,7 +101,8 @@ def start_driver(browser='edge'):
         edge_options.add_argument("--window-size=1920x1080")
         service = edg_Service(PathECDM)
         driver = webdriver.Edge(options=edge_options, service=service)
- 
+    
+    driver.set_page_load_timeout(DRIVER_TIMEOUT)
     return driver
 
 
@@ -104,8 +111,8 @@ def get_loc(page_source):
     log("get_loc started..")
     pr_data = str(page_source)
     log("pr_data is loded")
-    lat_ = re.search(r'.*"latitude":(\d*\.\d*).*', pr_data)
-    long_ = re.search(r'.*"longitude":(\d*\.\d*).*', pr_data)
+    lat_ = re.search(r'"latitude"\s*:\s*"?(?P<lat>\d+\.?\d*)"?', pr_data)
+    long_ = re.search(r'"longitude"\s*:\s*"?(?P<long>\d+\.?\d*)"?', pr_data)
     log("get_loc re serached")
     x_y = None
     log((lat_, long_))
@@ -197,40 +204,57 @@ def get_exp(page_source):
     explink = explink
     return explink
 
-def get_PropertyCases(url, n=RETRY):
-    for i in range(n):
-        divar = requests.get(url)
-        if divar.status_code == 200:
-            soup = BeautifulSoup(divar.content, 'html.parser')
-            Pcases = soup.find_all('a', class_ = "unsafe-kt-post-card__action")
-            if Pcases:
-                log('in %i try, Pcases found' % i)
-                return Pcases
-            else:
-                log('in %i try, Pcases not found' % i)
+def get_PropertyCases(url):
+    divar = requests.get(url)
+    if divar.status_code == 200:
+        soup = BeautifulSoup(divar.content, 'html.parser')
+        Pcases = soup.find_all('a', class_ = "unsafe-kt-post-card__action")
+        if Pcases:
+            return Pcases
         else:
-            log('in %i try, Pcases not found (status code: %s)' % (i, divar.status_code))
-        time.sleep(RETRY_SLEEP_TIME)
-    raise ReferenceError('status_code is not 200 or Pcases not found after %d tries' % n)
+            log('status code: %s' % (divar.status_code))
 
-def retry_get_data(function,Plink):
+def get_Pcases(Plink):
+    r = requests.get(Plink)
+    if r.status_code == 200:
+        return r.content
+    else:
+        return None
+
+def retry_get_data(function, Plink, retry=RETRY, driver=True):
     result = None
-    retry = RETRY
-    while retry > 0 and not result:
-        log('in retrying %i x-y not founded.' %retry)
-        retry -= 1
-        dr = start_driver()
-        log("retry driver started...")
-        dr.get(Plink)
-        log("retry get linked...")
-        time.sleep(RETRY_SLEEP_TIME)
-        log(F'{RETRY_SLEEP_TIME}sec later')
-        tmp_pgs = dr.page_source 
-        result = function(tmp_pgs)
-        log(result)
-        if not result:
-            dr.quit()
-    dr.quit()
+    if driver:
+        while retry > 0 and not result:
+            log('in retrying %i result not founded.' %(RETRY-retry))
+            retry -= 1
+            dr = start_driver()
+            log("retry driver started ...")
+            try:
+                dr.get(Plink)
+                log("retry get linked...")
+                time.sleep(RETRY_SLEEP_TIME)
+                log(F'{RETRY_SLEEP_TIME}sec later')
+                tmp_pgs = dr.page_source 
+                result = function(tmp_pgs)
+                log(result)
+            except Exception as ex:
+                log((ex, Plink))
+                continue
+            if not result:
+                dr.quit()
+        dr.quit()
+    else:
+        while retry > 0 and not result:
+            log('in retrying %i result not founded.' %(RETRY-retry))
+            retry -= 1
+            try:
+                r = requests.get(Plink)
+                result = function(r.content)
+                log(result)
+            except Exception as ex:
+                log((ex, Plink))
+                continue
+
     return result
 
 
@@ -285,18 +309,25 @@ def update(landuse, ptype):
             field = grdict['propertises']
             insert_counter = 0
             Pcases = get_PropertyCases(grdict['url'])
+            if not Pcases:
+                log('retrying to find Pcases started.')
+                Pcases = retry_get_data(get_PropertyCases, grdict['url'],driver=False)
+            if not Pcases:
+                log("Pcases not founded after retrys.")
+                continue
             log('get'+ str(len(Pcases)) +' Pcasses')
-            try:
-                for Pcase in Pcases:
+
+            for Pcase in Pcases:
+                try:
                     Plink = 'https://divar.ir'+ Pcase.get('href')
-                    r = requests.get(Plink)
-                    if r.status_code != 200:
-                        for i in range(5):
-                            r = requests.get(Plink)
-                            if r.status_code == 200:
-                                break 
-                    page_source = r.content
-                    time.sleep(2)
+                    PcaseResponse = get_Pcases(Plink)
+                    if not PcaseResponse:
+                        log('retring for get_pcases started.')
+                        PcaseResponse = retry_get_data(get_Pcases, Plink, driver=False)
+                    if not PcaseResponse:
+                        log('PcaseRespons is not availabe.')
+                        continue
+                    page_source = PcaseResponse
                     log("get loc started...")
                     xy = get_loc(page_source)
                     #retry
@@ -307,12 +338,13 @@ def update(landuse, ptype):
                         log(Plink + ' have no loc')
                         continue
                     log('loc found...')
+
                     if 'buy_price' in field['find_key']:
                         rent = mortgage = 0
                         if field['find_key']['buy_price'] == 'price':
-                            log('get_buyprice running...')
+                            log('get_buyprice running 1 ...')
                             price = get_buyPrice(page_source)[0]
-                            log('get_buyprice done...')
+                            log('get_buyprice done 1 ...')
                             opt = field['find_key']['findall']
                             soup1 = BeautifulSoup(page_source, 'html.parser')
                             data = (soup1.find_all(opt[0],class_ = opt[1])[opt[2]]).get_text('thead').split('thead')
@@ -321,10 +353,10 @@ def update(landuse, ptype):
                             log('Area and CYear founded')
 
                         elif field['find_key']['buy_price'] == 'price_area':
-                            log('get_buyprice running...')
+                            log('get_buyprice running 2 ...')
                             price, Area = get_buyPrice(page_source)
                             CYear = 0
-                            log('get_buyprice done...')
+                            log('get_buyprice done 2 ...')
 
                     elif 'rent_price' in field['find_key']:
                         log('get_rentprice running...')
@@ -361,13 +393,15 @@ def update(landuse, ptype):
                     if not price:
                         log(Plink + ' have no price')
                         continue
+
                     log('get data done...')
+
                     output = {
                         'landuse': landuse,             'ptype' : ptype,        'price' : price,
                         'Area': int(Area),              'CYear': CYear ,        'mortgage': mortgage,
                         'rent': rent,                   'lat': xy[0],           'lon' : xy[1],
                         'mahale': get_district(page_source), 'exp': get_exp(page_source), 'link' : Plink,
-                        'date_time' : datetime.today()
+                        'date_time' : timezone.now()
                     }
                     log('output create...')
                     if not_duplicate(propertyModel,output):
@@ -376,9 +410,12 @@ def update(landuse, ptype):
                         log(f"[{landuse}- {ptype}] Case {str(Pcases.index(Pcase)+1)}/{str(len(Pcases))} & {str(insert_counter)} Case inserted")
                     else: 
                         log(Plink + ' is duplicate')
-                log(landuse+', '+ptype+' UPDATED!')
-            except Exception as ex:
-                log(ex)
+                        
+                except Exception as ex:
+                    log((ex, Plink))
+                    continue
+                
+            log(landuse+', '+ptype+' UPDATED!')
 
 def cdt(lu, typ):
     if propertyModel.objects.filter(landuse=lu,ptype= typ):
