@@ -2,15 +2,13 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
-from .services import log, logreader, update, cdt, stop_update, STOPSIGN
+from .services import log, logreader, update, cdt, stop_update
 
 
 
 @staff_member_required
 def updatePg(request):
     #TODO create variable that show the upadate is running and stope whene html closed(?!) 
-    global STOPSIGN
-    STOPSIGN = False
 
     if request.method == 'POST' and request.POST.get('land_typ'):
         land_types = request.POST.getlist('land_typ')
@@ -22,8 +20,6 @@ def updatePg(request):
             except Exception as ex:
                 log(str(ex)+'----')
         
-        STOPSIGN = False
-
     elif request.method == 'POST' and request.POST.get('LogKey'):
             return JsonResponse({'log': logreader()})       
 
