@@ -14,11 +14,15 @@ from  bs4 import BeautifulSoup
 from selenium import webdriver
 
 
-STOPSIGN = False
-DRIVER_TIMEOUT = 30
-RETRY_SLEEP_TIME = 5 
-RETRY = 3
 
+
+DRIVER_BROWSER = os.environ.get('DRIVER_BROWSER',default='edge')
+DRIVER_TIMEOUT = int(os.environ.get('DRIVER_TIMEOUT',default=30))
+RETRY_SLEEP_TIME = int(os.environ.get('RETRY_SLEEP_TIME',default=5))
+RETRY = int(os.environ.get('RETRY',default=3))
+
+
+STOPSIGN = False
 GRAND_DICT = [
     {"landuse":"res", "ptype":"buy", "url":"https://divar.ir/s/tehran/buy-apartment",
      "propertises":{'landuse':"res",'ptype':"buy",
@@ -69,7 +73,7 @@ def logreader():
         return logtxt[-1]
 
 #SELENIUM_DRIVER
-def start_driver(browser='edge',DRIVER_TIMEOUT=60):
+def start_driver(browser=DRIVER_BROWSER,DRIVER_TIMEOUT=60):
     if browser == 'chrome':
 
         from selenium.webdriver.chrome.service import Service as ch_Service
@@ -95,12 +99,12 @@ def start_driver(browser='edge',DRIVER_TIMEOUT=60):
         from selenium.webdriver.edge.service import Service as edg_Service
         from webdriver_manager.microsoft import EdgeChromiumDriverManager
         
-        if os.path.isfile(r"ECD.txt"):
-            with open(r"ECD.txt", 'r') as file:
+        if os.path.isfile(r"msedgedriver.txt"):
+            with open(r"msedgedriver.txt", 'r') as file:
                 PathECDM = file.read().strip()
         else:
             PathECDM = EdgeChromiumDriverManager().install()
-            with open(r"ECD.txt", 'w') as file:
+            with open(r"msedgedriver.txt", 'w') as file:
                 file.write(PathECDM)
         edge_options = edg_Options()
         edge_options.add_argument("--headless=new")
@@ -115,14 +119,10 @@ def start_driver(browser='edge',DRIVER_TIMEOUT=60):
 
 #GET_ADV_DATA
 def get_loc(page_source):
-    log("get_loc started..")
     pr_data = str(page_source)
-    log("pr_data is loded")
     lat_ = re.search(r'"latitude"\s*:\s*"?(?P<lat>\d+\.?\d*)"?', pr_data)
     long_ = re.search(r'"longitude"\s*:\s*"?(?P<long>\d+\.?\d*)"?', pr_data)
-    log("get_loc re serached")
     x_y = None
-    log((lat_, long_))
     if lat_ and long_ :
         (lat,) = lat_.groups()
         (long,) = long_.groups()
@@ -215,11 +215,11 @@ def get_PropertyCases(url):
     divar = requests.get(url)
     if divar.status_code == 200:
         soup = BeautifulSoup(divar.content, 'html.parser')
-        Pcases = soup.find_all('a', class_ = "unsafe-kt-post-card__action")
+        Pcases = soup.find_all('a', class_="unsafe-kt-post-card__action")
         if Pcases:
             return Pcases
         else:
-            log('status code: %s' % (divar.status_code))
+            log('Pcases not found. status code: %i.' %(divar.status_code))
 
 def get_Pcases(Plink):
     r = requests.get(Plink)
@@ -237,12 +237,12 @@ def retry_get_data(function, Plink, retry=RETRY, driver=True):
             log('in retrying %i result not founded.' %(RETRY-retry))
             retry -= 1
             dr = start_driver()
-            log("retry driver started ...")
+            #log("retry driver started ...")
             try:
                 dr.get(Plink)
-                log("retry get linked...")
-                time.sleep(RETRY_SLEEP_TIME)
-                log(F'{RETRY_SLEEP_TIME}sec later')
+                #log("retry get linked...")
+                time.sleep(int(RETRY_SLEEP_TIME))
+                #log(F'{RETRY_SLEEP_TIME}sec later')
                 tmp_pgs = dr.page_source 
                 result = function(tmp_pgs)
                 dr.quit()
@@ -256,7 +256,7 @@ def retry_get_data(function, Plink, retry=RETRY, driver=True):
             try:
                 r = requests.get(Plink)
                 result = function(r.content)
-                log(result)
+                #log(result)
             except Exception as ex:
                 log((ex, Plink))
                 continue
@@ -314,12 +314,13 @@ def update(landuse, ptype):
         if grdict["landuse"] == landuse and grdict["ptype"] == ptype:
             if STOPSIGN:
                 log('update(%s, %s) is stopped.'% (landuse,ptype))
+                STOPSIGN=False
                 return None
             field = grdict['propertises']
             insert_counter = 0
             Pcases = get_PropertyCases(grdict['url'])
             if not Pcases:
-                log('retrying to find Pcases started.')
+                #log('retrying to find Pcases started.')
                 Pcases = retry_get_data(get_PropertyCases, grdict['url'],driver=False)
             if not Pcases:
                 log("Pcases not founded after retrys.")
@@ -329,51 +330,52 @@ def update(landuse, ptype):
             for Pcase in Pcases:
                 if STOPSIGN:
                     log('update(%s, %s) is stopped.'% (landuse,ptype))
+                    STOPSIGN=False
                     return None
                 try:
                     Plink = 'https://divar.ir'+ Pcase.get('href')
                     PcaseResponse = get_Pcases(Plink)
                     if not PcaseResponse:
-                        log('retring for get_pcases started.')
+                        #log('retring for get_pcases started.')
                         PcaseResponse = retry_get_data(get_Pcases, Plink, driver=False)
                     if not PcaseResponse:
                         log('PcaseRespons is not availabe.')
                         continue
                     page_source = PcaseResponse
-                    log("get loc started...")
                     xy = get_loc(page_source)
+
                     #retry
                     if not xy:
-                        log('get_loc retry is running...')
-                        xy = retry_get_data(get_loc,Plink)
+                        #log('get_loc retry is running...')
+                        xy = retry_get_data(get_loc,Plink=Plink)
                     if not xy:
                         log(Plink + ' have no loc')
                         continue
-                    log('loc found...')
+                    #log('loc found...')
 
                     if 'buy_price' in field['find_key']:
                         rent = mortgage = 0
                         if field['find_key']['buy_price'] == 'price':
-                            log('get_buyprice running 1 ...')
+                            #log('get_buyprice running 1 ...')
                             price = get_buyPrice(page_source)[0]
-                            log('get_buyprice done 1 ...')
+                            #log('get_buyprice done 1 ...')
                             opt = field['find_key']['findall']
                             soup1 = BeautifulSoup(page_source, 'html.parser')
                             data = (soup1.find_all(opt[0],class_ = opt[1])[opt[2]]).get_text('thead').split('thead')
                             Area = data[3]
                             CYear = data[4]
-                            log('Area and CYear founded')
+                            #log('Area and CYear founded')
 
                         elif field['find_key']['buy_price'] == 'price_area':
-                            log('get_buyprice running 2 ...')
+                            #log('get_buyprice running 2 ...')
                             price, Area = get_buyPrice(page_source)
                             CYear = 0
-                            log('get_buyprice done 2 ...')
+                            #log('get_buyprice done 2 ...')
 
                     elif 'rent_price' in field['find_key']:
-                        log('get_rentprice running...')
+                        #log('get_rentprice running...')
                         mortgage, rent = get_rentPrice(page_source)
-                        log('get_rentprice done...')
+                        #log('get_rentprice done...')
                         soup1 = BeautifulSoup(page_source, 'html.parser')
                         opt = field['find_key']
 
@@ -384,12 +386,12 @@ def update(landuse, ptype):
                         #get_price & get_Area & get_CYear
                         style = soup1.find_all(opt['style_findall'][0] , class_= opt['style_findall'][1])
                         if style:
-                            log('style founded...')
+                            #log('style founded...')
                             prices = soup1.find_all(opt['styled_findall'][0] , class_= opt['styled_findall'][1])
                             Area = prices[0].get_text()
                             CYear = prices[1].get_text()
                         elif not style:
-                            log('style not found...')
+                            #log('style not found...')
                             FArea = soup1.find_all(opt['notstyled_findall'][0], class_= opt['notstyled_findall'][1])[opt['notstyled_findall'][2]]
                             F = FArea.get_text('p').split('p')
                             for i in range(len(F)):
@@ -401,12 +403,12 @@ def update(landuse, ptype):
                             log(Plink + ' have no price')
                             continue
                         price = int((mortgage + (rent*30))/int(Area))
-                        log('price found')
+                        #log('price found')
                     if not price:
                         log(Plink + ' have no price')
                         continue
 
-                    log('get data done...')
+                    #log('get data done...')
 
                     output = {
                         'landuse': landuse,             'ptype' : ptype,        'price' : price,
@@ -415,7 +417,7 @@ def update(landuse, ptype):
                         'mahale': get_district(page_source), 'exp': get_exp(page_source), 'link' : Plink,
                         'date_time' : timezone.now()
                     }
-                    log('output create...')
+                    #log('output create...')
                     if not_duplicate(propertyModel,output):
                         insert(propertyModel,output)
                         insert_counter = insert_counter + 1
