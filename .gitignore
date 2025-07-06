@@ -6,5 +6,6 @@
 */.ipynb_checkpoints/
 *.swp
 venv
-ECD.txt
+msedgedriver.txt
+chromedriver.txt
 microsoft-edge-stable_136.0.3240.92-1_amd64.deb
