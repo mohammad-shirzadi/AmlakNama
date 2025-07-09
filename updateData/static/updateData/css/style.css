@@ -1,24 +1,128 @@
-.column{
-    color: aliceblue;
-    background-color: black;
-    font-size: 48pt;
-    float: left;
-    width: 30%;
+/* update.css */
+.container {
+    max-width: 720px;
+    margin: auto;
+    padding: 2rem;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    direction: rtl;
+    font-family: "Vazirmatn", sans-serif;
 }
 
-.row:after {
-  content: "";
-  display: table;
-  clear: both;
-  height: 70pt;
-}
-.table{
-  border-top: 50px;
-  border-color: antiquewhite;
-  width: 100%;
-  height: 50px;
+.description {
+    font-size: 1rem;
+    color: #444;
+    margin-bottom: 1.5rem;
 }
 
-.background{
-  background-color: aquamarine;
+.checkbox-group label {
+    display: block;
+    margin: 0.75rem 0;
+    font-size: 0.95rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    background: #f3f3f3;
+    border-radius: 6px;
+    transition: background 0.3s;
+}
+
+.checkbox-group label:hover {
+    background: #eaeaea;
+}
+
+.checkbox-group input {
+    margin-left: 0.5rem;
+}
+
+.buttons {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    flex: 1;
+    padding: 0.7rem 1rem;
+    background-color: #007bff;
+    border: none;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+
+
+.table {
+    background-color: #fdfdfd;
+    border: 1px solid #ccc;
+    padding: 1rem;
+    margin-top: 2rem;
+    border-radius: 6px;
+    font-family: monospace;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.table div {
+    direction: ltr;
+    text-align: left;
+    white-space: pre-wrap;
+}
+
+.status-log {
+    margin-top: 2rem;
+}
+.spinner {
+    width: 40px;
+    height: 40px;
+    margin: 1rem auto;
+    border: 4px solid #ccc;
+    border-top-color: #007bff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+.btn {
+    display: inline-block;
+    padding: 0.7rem 1.4rem;
+    font-size: 1rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    text-align: center;
+    color: white;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background-color: #b02a37;
 }
