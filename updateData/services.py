@@ -26,51 +26,57 @@ STOPSIGN = False
 GRAND_DICT = [
     {"landuse":"res", "ptype":"buy", "url":"https://divar.ir/s/tehran/buy-apartment",
      "propertises":{'landuse':"res",'ptype':"buy",
-                    'find_key':{"findall":['table',"kt-group-row",0], 'buy_price':'price'}
-                    }},
+                    'find_key':{"findall":['table',"kt-group-row",0], 'buy_price':'price'}},
+     "update_status":"deactive" },
 
     {"landuse":"com", "ptype":"buy","url":"https://divar.ir/s/tehran/buy-commercial-property",
      "propertises":{'landuse':"res",'ptype':"buy",
-                    'find_key':{"findall":['table',"kt-group-row",0],'buy_price':'price' }
-                    }},
+                    'find_key':{"findall":['table',"kt-group-row",0],'buy_price':'price'}},
+     "update_status":"deactive" },
 
     {"landuse":"resland", "ptype":"buy","url":"https://divar.ir/s/tehran/buy-old-house",
      "propertises":{'landuse':"res",'ptype':"buy",
-                    'find_key':{"findall":['table',"kt-group-row",0],'buy_price':'price_area'}
-                    }},
+                    'find_key':{"findall":['table',"kt-group-row",0],'buy_price':'price_area'}},
+     "update_status":"deactive"},
 
     {"landuse":"res", "ptype":"rent","url":"https://divar.ir/s/tehran/rent-residential",
      "propertises":{'landuse':"res",'ptype':"buy",
                     'find_key':{"style_findall":['input',"kt-range-slider__input"],
                                 "styled_findall":['td','kt-group-row-item kt-group-row-item__value kt-group-row-item--info-row'],
                                 "notstyled_findall":['table','kt-group-row',0],
-                                'rent_price':'mortgage_rent'}
-                    }},
+                                'rent_price':'mortgage_rent'}},
+     "update_status":"deactive" },
 
     {"landuse":"com", "ptype":"rent","url":"https://divar.ir/s/tehran/rent-commercial-property",
      "propertises":{'landuse':"res",'ptype':"buy",
                     'find_key':{"style_findall":['input',"kt-range-slider__input"],
                                 "styled_findall":['td','kt-group-row-item kt-group-row-item__value kt-group-row-item--info-row'],
                                 "notstyled_findall":['table','kt-group-row',0],
-                                'rent_price':'mortgage_rent'}
-                    }},
+                                'rent_price':'mortgage_rent'}},
+     "update_status":"deactive" },
 ]
 
 
 
-
-
 #LOG
-logging.basicConfig(filename='log', level=logging.INFO, format='%(asctime)s: %(message)s')
+logging.basicConfig(filename='log.log', level=logging.INFO, format='%(asctime)s: %(message)s')
 def log(message):
     logging.info(message)
 
 def logreader():
-    with open("log",'r') as file:
+    land_typ_stat = []
+    with open("log.log",'r') as file:
         logtxt = file.readlines()
         if not logtxt: 
             logtxt = ['']
-        return logtxt[-1]
+        return logtxt[-1] + str(land_typ_stat)
+
+
+def status_reader():
+    PCStatus = []
+    for case in GRAND_DICT:
+        PCStatus.append(case['landuse'] + '_' + case['ptype'] + ': ' + case['update_status'])
+    return PCStatus
 
 #SELENIUM_DRIVER
 def start_driver(browser=DRIVER_BROWSER,DRIVER_TIMEOUT=60):
@@ -312,9 +318,11 @@ def update(landuse, ptype):
     log('update(%s, %s) is run.'% (landuse,ptype))
     for grdict in GRAND_DICT:
         if grdict["landuse"] == landuse and grdict["ptype"] == ptype:
+            grdict['update_status'] = 'active'
             if STOPSIGN:
                 log('update(%s, %s) is stopped.'% (landuse,ptype))
                 STOPSIGN=False
+                grdict['update_status'] = 'deactive'
                 return None
             field = grdict['propertises']
             insert_counter = 0
@@ -331,6 +339,7 @@ def update(landuse, ptype):
                 if STOPSIGN:
                     log('update(%s, %s) is stopped.'% (landuse,ptype))
                     STOPSIGN=False
+                    grdict['update_status'] = 'deactive'
                     return None
                 try:
                     Plink = 'https://divar.ir'+ Pcase.get('href')

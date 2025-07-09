@@ -2,7 +2,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
-from .services import log, logreader, update, cdt, stop_update
+from .services import log, logreader, update, cdt, stop_update, status_reader
 
 
 
@@ -21,7 +21,9 @@ def updatePg(request):
                 log(str(ex)+'----')
         
     elif request.method == 'POST' and request.POST.get('LogKey'):
-            return JsonResponse({'log': logreader()})       
+        return JsonResponse({'log': logreader()})   
+    elif request.POST.get('PCStatus'):
+        return JsonResponse({'PCStatus': status_reader()})
 
     elif request.method == 'GET':
         pass
@@ -45,7 +47,6 @@ def updatePg(request):
 
 @staff_member_required
 def stop_updatePg(request):
-    print(request.POST)
     if request.POST.get('stop'):
         stop_update()
     return render(request,'admin/updatePg.html')
