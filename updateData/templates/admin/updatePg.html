@@ -2,102 +2,72 @@
 {% load i18n admin_urls static admin_modify %}
 {% load static %}
 
-{% block title %} به روز رسانی داده‌ها {% endblock %}
+{% block title %} به‌روزرسانی داده‌ها {% endblock %}
 
 {% block content %}
-    <div class="conteiner" dir="rtl">
-        <form id="update-form" onsubmit="submitUpdate(event)">
-            {% csrf_token %}
-            <p>جهت به روز رسانه داده‌ها در کاربری‌های مختلف 
-                گزینه مورد نظر را انتخاب کرده 
-                و به‌روزرسانی را انتخاب کنید
-            </p>
-            <p>
-                <input type="checkbox" name="land_typ" id="1" value="res-buy">
-                خرید و فروش مسکونی  (آخرین به روزرسانی:  {{ lastupdateRB }} -تعداد نمونه‌های موجود:  {{ count_res_buy }})   
-            </p>
-            <p>
-                <input type="checkbox" name="land_typ" id="2" value="res-rent">
-                رهن و اجاره مسکونی  (آخرین به روزرسانی:  {{ lastupdateRR }} -تعداد نمونه‌های موجود:  {{ count_res_rent }})
-            </p>
-            <p>
-                <input type="checkbox" name="land_typ" value="resland-buy">
-                خریدوفروش زمین و ملک کلنگی  (آخرین به روزرسانی:  {{ lastupdateRlB }} -تعداد نمونه‌های موجود: {{ count_resland_buy }})
-            </p>
-            <P>
-                <input type="checkbox" name="land_typ" value="com-rent">
-                رهن و اجاره ملک تجاری  (آخرین به روزرسانی: {{ lastupdateCR }} -تعداد نمونه‌های موجود:  {{ count_com_rent }})
-            </P>
-            <P>
-                <input type="checkbox" name="land_typ" value="com-buy">
-                خرید و فروش ملک تجاری  (آخرین به روزرسانی:{{ lastupdateCB }} -تعداد نمونه‌های موجود: {{ count_com_buy }})
-            </P>
-            <P>   
-                <input type="submit" value="به‌روز رسانی داده‌ها">
-            </P>
-        </form>
-        
-        <button onclick="stopTask()">توقف به‌روز رسانی داده‌ها</button>
+<div class="container" dir="rtl">
+    <form id="update-form" method="post">
+        {% csrf_token %}
+        <p class="description">
+            جهت به‌روزرسانی داده‌ها در کاربری‌های مختلف، گزینه مورد نظر را انتخاب کرده و روی دکمه به‌روزرسانی کلیک کنید.
+        </p>
 
-        <div class="table" dir="ltr">
-            log: 
-            <div id="log" dir="ltr"></div>
+        <div class="checkbox-group">
+            <ul class="checkbox-list">
+                <li>
+                    <label><input type="checkbox" name="land_typ" value="res-buy">
+                        خرید و فروش مسکونی (آخرین به‌روزرسانی: {{ lastupdateRB }} - تعداد نمونه‌های موجود: {{ count_res_buy }})
+                    </label>
+                </li>
+                <li>
+                    <label><input type="checkbox" name="land_typ" value="res-rent">
+                        رهن و اجاره مسکونی (آخرین به‌روزرسانی: {{ lastupdateRR }} - تعداد نمونه‌های موجود: {{ count_res_rent }})
+                    </label>
+                </li>
+                <li>
+                    <label><input type="checkbox" name="land_typ" value="resland-buy">
+                        خرید و فروش زمین و ملک کلنگی (آخرین به‌روزرسانی: {{ lastupdateRlB }} - تعداد نمونه‌های موجود: {{ count_resland_buy }})
+                    </label>
+                </li>
+                <li>
+                    <label><input type="checkbox" name="land_typ" value="com-rent">
+                        رهن و اجاره ملک تجاری (آخرین به‌روزرسانی: {{ lastupdateCR }} - تعداد نمونه‌های موجود: {{ count_com_rent }})
+                    </label>
+                </li>
+                <li>
+                    <label><input type="checkbox" name="land_typ" value="com-buy">
+                        خرید و فروش ملک تجاری (آخرین به‌روزرسانی: {{ lastupdateCB }} - تعداد نمونه‌های موجود: {{ count_com_buy }})
+                    </label>
+                </li>
+            </ul>
         </div>
-            
-        <script>
-            let y = ''
-            const txt = [".",".",".","."];
-            async function getlog() {
-                const response = await fetch("{% url 'update' %}",
-                {method: "POST",
-                headers:{ 'X-CSRFToken': '{{ csrf_token }}'},
-                body: new URLSearchParams({'csrfmiddlewaretoken': '{{ csrf_token }}', LogKey: 'logkey'})});
-                const data = await response.json();
-                let x = y;
-                y = data.log;
-                if (x != y){
-                    txt[0] = txt[1];
-                    txt[1] = txt[2];
-                    txt[2] = txt[3];
-                    txt[3] = data.log;
 
-                }
-                let logtext = '';
-                for (let i = 0; i < txt.length; i++)
-                {
-                    logtext += txt[i];
-                }                
-                document.getElementById('log').innerText = logtext;                               
-            }
-            
-            async function submitUpdate(event) {
-                event.preventDefault();  // Prevent normal form submission  
-                
-                const form = document.getElementById("update-form");
-                const formData = new FormData(form);
-
-                const response = await fetch("{% url 'update' %}", {
-                    method: "POST",
-                    headers: { "X-CSRFToken": "{{ csrf_token }}"},
-                    body: formData
-                });
-
-                const result = await response.json();
-                alert(result.status || "Update triggered");
-            }
-            
-            async function stopTask() {
-                const response = await fetch("{% url 'stop_update' %}", {
-                    method: "POST",
-                    headers: {"X-CSRFToken": "{{ csrf_token }}"},
-                    body: new URLSearchParams({'csrfmiddlewaretoken': '{{ csrf_token }}', stop: 'stop'})
-                });
-                
-                const result = await response.json();
-                alert(result.status || "Task stopped");
-            }
-            
-            setInterval(getlog,1000)
-        </script>
+        <div class="buttons">
+            <button type="submit" class="btn btn-primary">به‌روزرسانی داده‌ها</button>
+            <button type="button" onclick="stopTask()" class="btn btn-danger">توقف به‌روزرسانی داده‌ها</button>
         </div>
+        <div id="spinner" class="spinner" style="display: none;"></div>
+    </form>
+
+    <div class="status-log">
+        <div class="table">
+            <strong>وضعیت:</strong>
+            {% for i in "12345" %}
+                <div id="status-{{ i }}"></div>
+            {% endfor %}
+        </div>
+
+        <div class="table">
+            <strong>لاگ:</strong>
+            <div id="log"></div>
+        </div>
+    </div>
+</div>
+<script>
+    window.csrfToken = "{{ csrf_token }}";
+    window.statusURL = "{% url 'update' %}";
+    window.stopURL = "{% url 'stop_update' %}";
+</script>
+<script src="{% static 'updateData/js/main.js' %}"></script>
+
 {% endblock %}
