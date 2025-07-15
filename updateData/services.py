@@ -97,7 +97,7 @@ def start_driver(browser=DRIVER_BROWSER,driver_timeout=DRIVER_TIMEOUT):
 
         chrome_options = ch_Options() 
         chrome_options.page_load_strategy = 'eager'
-        #chrome_options.add_argument("--headless=new")
+        chrome_options.add_argument("--headless=new")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--window-size=1920x1080")
         chrome_options.add_argument("--no-sandbox")
@@ -123,7 +123,7 @@ def start_driver(browser=DRIVER_BROWSER,driver_timeout=DRIVER_TIMEOUT):
 
         edge_options = edg_Options()
         edge_options.page_load_strategy = 'eager'
-        #edge_options.add_argument("--headless=new")
+        edge_options.add_argument("--headless=new")
         edge_options.add_argument("--disable-gpu")
         edge_options.add_argument("--window-size=1920x1080")
         edge_options.add_argument("--no-sandbox")
@@ -478,6 +478,7 @@ def update(landuse, ptype):
                 
         except Exception as ex:
             log(str(ex)+Plink)
+            grdict['update_status'] = 'deactive'
             raise Exception
             #continue
     grdict['update_status'] = 'deactive'
