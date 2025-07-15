@@ -90,5 +90,5 @@ async function stopTask() {
 
 document.addEventListener("DOMContentLoaded", () => {
     setInterval(getlog, 1000);
-    setInterval(status, 4000);
+    setInterval(status, 2000);
 });
