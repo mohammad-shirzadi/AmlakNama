@@ -3,7 +3,15 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
 from .services import log, logreader, update, cdt, stop_update, status_reader
+import threading
 
+def ThradedUpdate(land, typ):
+    try:
+        update(land, typ)
+        log(f"update('{land}','{typ}') is done")
+    except Exception as ex:
+        log(str(ex)+'----')
+        raise Exception
 
 
 @staff_member_required
@@ -14,12 +22,8 @@ def updatePg(request):
         land_types = request.POST.getlist('land_typ')
         for land_typ in land_types:
             [land, typ] = land_typ.split('-')
-            try:
-                update(land, typ)
-                log(f"update('{land}','{typ}') is done")
-            except Exception as ex:
-                log(str(ex)+'----')
-                raise Exception
+            threading.Thread(target=ThradedUpdate, args=(land,typ)).start()
+
         
     elif request.method == 'POST' and request.POST.get('LogKey'):
         return JsonResponse({'log': logreader()})   
