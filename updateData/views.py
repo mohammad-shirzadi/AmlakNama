@@ -19,6 +19,7 @@ def updatePg(request):
                 log(f"update('{land}','{typ}') is done")
             except Exception as ex:
                 log(str(ex)+'----')
+                raise Exception
         
     elif request.method == 'POST' and request.POST.get('LogKey'):
         return JsonResponse({'log': logreader()})   
