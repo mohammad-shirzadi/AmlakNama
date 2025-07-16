@@ -49,16 +49,16 @@
         <div id="spinner" class="spinner" style="display: none;"></div>
     </form>
 
-    <div class="status-log">
+    <div class="status-log" dir="ltr">
         <div class="table">
-            <strong>وضعیت:</strong>
+            <strong>Status:</strong>
             {% for i in "12345" %}
                 <div id="status-{{ i }}"></div>
             {% endfor %}
         </div>
 
         <div class="table">
-            <strong>لاگ:</strong>
+            <strong>Log:</strong>
             <div id="log"></div>
         </div>
     </div>
@@ -66,7 +66,7 @@
 <script>
     window.csrfToken = "{{ csrf_token }}";
     window.statusURL = "{% url 'update' %}";
-    window.stopURL = "{% url 'stop_update' %}";
+    window.stopURL = "{% url 'update' %}";
 </script>
 <script src="{% static 'updateData/js/main.js' %}"></script>
 

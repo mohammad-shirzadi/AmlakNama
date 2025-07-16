@@ -263,7 +263,6 @@ def get_Pcases(Plink):
     driver.quit()
     return source
 
-
 def retry_get_data(function, Plink, retry=RETRY, driver=DRIVER):
     global STOPSIGN, RETRY_SLEEP_TIME, RETRY, DRIVER
     result = None
@@ -339,7 +338,7 @@ def insert(propertyModel,output):
             date_time=output['date_time']
         )
     except Exception as error:
-        log("in insert step errore: " + str(error) + "---" + str(output))
+        log(f'[{output['landuse']}- {output['ptype']}] - in insert step errore: {str(error)} -- {str(output)}.')
         raise Exception
     
 
@@ -349,13 +348,13 @@ def update(landuse, ptype):
     log('update(%s, %s) is run.'% (landuse,ptype))
     for grand_dict in GRAND_DICT:
         if grand_dict["landuse"] == landuse and grand_dict["ptype"] == ptype:
+            grdict['update_status'] = 'active'
             grdict = grand_dict
     if not grdict:
         raise "grdict is not defined. "
 
-    grdict['update_status'] = 'active'
     if STOPSIGN:
-        log('update(%s, %s) is stopped. '% (landuse,ptype))
+        log(f'[{landuse}- {ptype}] - update is stopped. ')
         STOPSIGN=False
         grdict['update_status'] = 'deactive'
         return None
@@ -367,7 +366,7 @@ def update(landuse, ptype):
         log("Pcases not founded after retrys.")
         return None
     
-    log('get'+ str(len(Pcases)) +' Pcasses')
+    log(f'[{landuse}- {ptype}] - get {str(len(Pcases))} Pcasses')
     for Pcase in Pcases:
         output = {
             'landuse': landuse, 'ptype' : ptype, 'price' : None,
@@ -390,13 +389,13 @@ def update(landuse, ptype):
             if not page_source:
                 page_source = retry_get_data(get_Pcases, Plink, driver=False)
             if not page_source:
-                log('PcaseRespons is not availabe.')
+                log(f'[{landuse}- {ptype}] - PcaseRespons is not availabe.')
                 continue
             
             
 
             if not has_map(page_source):
-                log("has map is false. " + Plink)
+                log(f'[{landuse}- {ptype}] - {Plink} - has map is false.')
                 continue
 
             xy = get_loc(page_source)
@@ -405,7 +404,7 @@ def update(landuse, ptype):
             if not xy:
                 xy = retry_get_data(get_loc,Plink=Plink)
             if not xy:
-                log(Plink + ' have no loc')
+                log(f'[{landuse}- {ptype}] - {Plink} - have no loc')
                 continue
 
 
@@ -433,7 +432,7 @@ def update(landuse, ptype):
                 opt = grdict['find_key']
                 
                 if 'اجارهٔ دفاتر صنعتی، کشاورزی و تجاری' in soup1.find_all('span', class_= "kt-breadcrumbs__action-text")[2]:
-                    log(Plink + 'indasterial Case')
+                    log(f'[{landuse}- {ptype}] - {Plink} - indasterial Case')
                     continue
 
                 style = soup1.find_all(opt['style_findall'][0] , class_= opt['style_findall'][1])
@@ -453,13 +452,13 @@ def update(landuse, ptype):
                             output['CYear'] = F[int(i+ (len(F)/2))]
                 
                 if output['mortgage'] is None and output['rent'] is None:
-                    log(Plink + ' have no price')
+                    log(f'[{landuse}- {ptype}] - {Plink} - have no price')
                     continue
                 
                 output['price'] = int((output['mortgage'] + (output['rent']*30))/int(output['Area']))
             
             if not output['price']:
-                log(Plink + ' have no price')
+                log(f'[{landuse}- {ptype}] - {Plink} - have no price')
                 continue
             
             output['lat'] = xy[0]
@@ -484,10 +483,7 @@ def update(landuse, ptype):
     grdict['update_status'] = 'deactive'
     log(landuse+', '+ptype+' UPDATED!')
 
-
-
-
-def cdt(lu, typ):
+def cdt(lu: str, typ:str) -> list:
     if propertyModel.objects.filter(landuse=lu,ptype= typ):
         count = propertyModel.objects.filter(landuse=lu, ptype=typ).count()
         lastupdate = propertyModel.objects.filter(landuse=lu ,ptype=typ).last().date_time
@@ -495,6 +491,14 @@ def cdt(lu, typ):
         count = 0
         lastupdate = "بروز رسانی نشده"
     return [count, lastupdate]
+
+def ThradedUpdate(land, typ):
+    try:
+        update(land, typ)
+        log(f"update('{land}','{typ}') is done")
+    except Exception as ex:
+        log(str(ex)+'----')
+        raise Exception
 
 
 #MakeShape
