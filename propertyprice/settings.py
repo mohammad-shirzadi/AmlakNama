@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'explore.apps.ExploreConfig',
     'tasks.apps.TasksConfig',
     'django_celery_results',
+    'rest_framework'
 ]
 
 MIDDLEWARE = [
