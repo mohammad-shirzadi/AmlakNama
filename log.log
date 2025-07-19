@@ -1,0 +1,280 @@
+2025-07-19 07:04:10,536: Watching for file changes with StatReloader
+2025-07-19 07:04:25,517: Not Found: /favicon.ico
+2025-07-19 07:04:39,322: Created 927 records
+2025-07-19 07:04:39,706: Created 505 records
+2025-07-19 07:04:39,847: Created 505 records
+2025-07-19 07:04:39,847: updateData/shp/polymean.shp is Created
+2025-07-19 07:04:40,312: Internal Server Error: /admin/updateData/propertymodel/
+Traceback (most recent call last):
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.NumericValueOutOfRange: integer out of range
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/contrib/admin/options.py", line 719, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/utils/decorators.py", line 192, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/utils/decorators.py", line 190, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/views/decorators/cache.py", line 80, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/contrib/admin/sites.py", line 246, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/utils/decorators.py", line 48, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/utils/decorators.py", line 192, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/utils/decorators.py", line 190, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/contrib/admin/options.py", line 2057, in changelist_view
+    response = self.response_action(
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/contrib/admin/options.py", line 1686, in response_action
+    response = func(self, request, queryset)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/updateData/services.py", line 607, in makeshape
+    Insert()
+  File "/home/mohammad/w/AmlakNama/updateData/services.py", line 604, in Insert
+    lm.save(strict=True, verbose=verbose)
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/contrib/gis/utils/layermapping.py", line 728, in save
+    _save()
+  File "/usr/lib/python3.12/contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/contrib/gis/utils/layermapping.py", line 664, in _save
+    m.save(using=self.using)
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/models/base.py", line 902, in save
+    self.save_base(
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/models/base.py", line 1008, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/models/base.py", line 1169, in _save_table
+    results = self._do_insert(
+              ^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/models/base.py", line 1210, in _do_insert
+    return manager._insert(
+           ^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/models/query.py", line 1864, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1882, in execute_sql
+    cursor.execute(sql, params)
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.DataError: integer out of range
+
+2025-07-19 07:04:51,236: /home/mohammad/w/AmlakNama/updateData/services.py changed, reloading.
+2025-07-19 07:04:52,458: Watching for file changes with StatReloader
+2025-07-19 07:05:01,895: Created 100 records
+2025-07-19 07:05:02,034: Created 74 records
+2025-07-19 07:05:02,066: Created 74 records
+2025-07-19 07:05:02,066: updateData/shp/polymean.shp is Created
+2025-07-19 07:05:02,122: Internal Server Error: /admin/updateData/propertymodel/
+Traceback (most recent call last):
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/contrib/gis/gdal/datasource.py", line 67, in __init__
+    ds = capi.open_ds(
+         ^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/contrib/gis/gdal/prototypes/errcheck.py", line 131, in check_pointer
+    raise GDALException('Invalid pointer returned from "%s"' % func.__name__)
+django.contrib.gis.gdal.error.GDALException: Invalid pointer returned from "GDALOpenEx"
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/contrib/admin/options.py", line 719, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/utils/decorators.py", line 192, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/utils/decorators.py", line 190, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/views/decorators/cache.py", line 80, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/contrib/admin/sites.py", line 246, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/utils/decorators.py", line 48, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/utils/decorators.py", line 192, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/utils/decorators.py", line 190, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/contrib/admin/options.py", line 2057, in changelist_view
+    response = self.response_action(
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/contrib/admin/options.py", line 1686, in response_action
+    response = func(self, request, queryset)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/updateData/services.py", line 607, in makeshape
+    Insert()
+  File "/home/mohammad/w/AmlakNama/updateData/services.py", line 603, in Insert
+    lm = LayerMapping(MTPPolygon,MTP_shp,MTP_mapping,transform=False)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/contrib/gis/utils/layermapping.py", line 117, in __init__
+    self.ds = DataSource(data, encoding=encoding)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/contrib/gis/gdal/datasource.py", line 77, in __init__
+    raise GDALException('Could not open the datasource at "%s"' % ds_input)
+django.contrib.gis.gdal.error.GDALException: Could not open the datasource at "/home/mohammad/w/AmlakNama/updateData/updateData/shp/polymean.shp"
+2025-07-19 07:05:43,683: /home/mohammad/w/AmlakNama/updateData/services.py changed, reloading.
+2025-07-19 07:05:44,711: Watching for file changes with StatReloader
+2025-07-19 07:05:51,502: Created 100 records
+2025-07-19 07:05:51,611: Created 74 records
+2025-07-19 07:05:51,630: Created 74 records
+2025-07-19 07:05:51,630: updateData/shp/polymean.shp is Created
+2025-07-19 07:05:51,767: Internal Server Error: /admin/updateData/propertymodel/
+Traceback (most recent call last):
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.NumericValueOutOfRange: integer out of range
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/contrib/admin/options.py", line 719, in wrapper
+    return self.admin_site.admin_view(view)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/utils/decorators.py", line 192, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/utils/decorators.py", line 190, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/views/decorators/cache.py", line 80, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/contrib/admin/sites.py", line 246, in inner
+    return view(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/utils/decorators.py", line 48, in _wrapper
+    return bound_method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/utils/decorators.py", line 192, in _view_wrapper
+    result = _process_exception(request, e)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/utils/decorators.py", line 190, in _view_wrapper
+    response = view_func(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/contrib/admin/options.py", line 2057, in changelist_view
+    response = self.response_action(
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/contrib/admin/options.py", line 1686, in response_action
+    response = func(self, request, queryset)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/updateData/services.py", line 607, in makeshape
+    Insert()
+  File "/home/mohammad/w/AmlakNama/updateData/services.py", line 604, in Insert
+    lm.save(strict=True, verbose=verbose)
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/contrib/gis/utils/layermapping.py", line 728, in save
+    _save()
+  File "/usr/lib/python3.12/contextlib.py", line 81, in inner
+    return func(*args, **kwds)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/contrib/gis/utils/layermapping.py", line 664, in _save
+    m.save(using=self.using)
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/models/base.py", line 902, in save
+    self.save_base(
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/models/base.py", line 1008, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/models/base.py", line 1169, in _save_table
+    results = self._do_insert(
+              ^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/models/base.py", line 1210, in _do_insert
+    return manager._insert(
+           ^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/models/query.py", line 1864, in _insert
+    return query.get_compiler(using=using).execute_sql(returning_fields)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/models/sql/compiler.py", line 1882, in execute_sql
+    cursor.execute(sql, params)
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 122, in execute
+    return super().execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 79, in execute
+    return self._execute_with_wrappers(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/home/mohammad/w/AmlakNama/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.DataError: integer out of range
+
+2025-07-19 07:10:03,443: /home/mohammad/w/AmlakNama/explore/models.py changed, reloading.
+2025-07-19 07:10:04,507: Watching for file changes with StatReloader
+2025-07-19 07:49:34,295: Watching for file changes with StatReloader
+2025-07-19 07:49:54,858: Created 100 records
+2025-07-19 07:49:55,023: Created 74 records
+2025-07-19 07:49:55,055: Created 74 records
+2025-07-19 07:49:55,056: updateData/shp/polymean.shp is Created
+2025-07-19 07:50:15,021: Created 927 records
+2025-07-19 07:50:15,916: Created 505 records
+2025-07-19 07:50:16,022: Created 505 records
+2025-07-19 07:50:16,023: updateData/shp/polymean.shp is Created
