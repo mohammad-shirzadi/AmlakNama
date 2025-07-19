@@ -1,7 +1,5 @@
-**/.wdm/*
 .env
 **/__pycache__/*
-**/migrations/*
 *.pyc
 */.ipynb_checkpoints/
 *.swp

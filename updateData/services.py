@@ -604,7 +604,7 @@ def makeshape(modeladmin, request, queryset):
         lm.save(strict=True, verbose=verbose)
 
     geoprocsseing(create_point(queryset))
-    #Insert()
+    Insert()
 
 
 #STOP UPDATE
