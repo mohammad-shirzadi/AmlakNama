@@ -1,93 +1,19 @@
 #-*- coding: UTF-8 -*-
 
+from django.shortcuts import render
+from .services import createmap
+from  explore.models import masages
+
 from rest_framework.views import APIView
 
-from django.shortcuts import render
-import matplotlib.pyplot
-from  explore.models import masages
-import geopandas
-import matplotlib
-import folium
-import numpy
+
+
 
 LU = 'res'
 TYP = 'buy'
 REG = 0
 I = "CartoDB positron"
 ALLTILE = ["OpenStreetMap", "CartoDB positron", "CartoDB dark_matter"]
-
-
-
-def createmap(lu='res',typ='buy',reg=0,tile="CartoDB positron"):
-    Pgdf = geopandas.read_file(r"updateData/shp/polymean.shp")
-    Tgdf = geopandas.read_file(r"updateData/shp/StaticShape/Mahalat_Tehran.shp")
-    fieldR = ['NAME_MAHAL','price', 'mortgage', 'rent']
-    fieldB = ['NAME_MAHAL','price']
-
-    if reg == 0:
-        txt = ''
-    elif reg in range(1,23):
-        txt = f'and reg_no == {reg}'
-    if typ == 'buy':
-        popupf = fieldB
-    elif typ == 'rent':
-        popupf = fieldR
-
-    mp = Pgdf.query(f'landuse == "{lu}" and ptype == "{typ}"'+ txt)
-    fmp = Pgdf.query(f'landuse == "{lu}" and ptype == "{typ}"')
-
-    m = mp.explore(
-        column="price",
-        scheme='naturalbreaks',
-        legend=False,
-        k=50,
-        tooltip=False,
-        popup=popupf,
-        legend_kwds=dict(colorebar=False),
-        #name= l + '-' + t,
-        tiles=tile,
-        zoom_control=False,
-        zoom=11
-    )
-    Tgdf.explore(
-    m=m,
-    color='None',
-    tooltip=False,
-    popup=['NAME_MAHAL'],
-    style_kwds={
-        'color':'Black',
-        'weight': 1,
-        }   
-    )
-    
-    m.save(r"explore/static/explore/map/myhtml.html")
-
-    lr = list(mp.reg_no)
-    ln = list(mp.NAME_MAHAL)
-    lp = list(mp.price)
-    regmeanprice = mp.pivot_table('price','reg_no')
-    reglist = list(regmeanprice.index)
-    regmean = []
-    for i in range(len(regmeanprice.values.tolist())):
-        regmean.append(regmeanprice.values.tolist()[i][0])
-    maxp = numpy.max(lp)
-    minp = numpy.min(lp)
-    meanp = numpy.mean(lp)
-    d = {
-        'RegionList' : numpy.unique(lr),
-        'RNList' : reglist,
-        'RMList' : regmean,
-        'FRegionList' : numpy.unique(list(fmp.reg_no)),
-        'NameList' : ln,
-        'PriceList' : lp,
-        'MaxPrice' : "{:,}".format(int(maxp)),
-        'NameMaxPrice' : ln[lp.index(maxp)],
-        'MeanPrice' : "{:,}".format(int(meanp)),
-        'MinPrice' : "{:,}".format(int(minp)),
-        'NameMinPrice' : ln[lp.index(minp)],
-    }
-    return d
-
 
 
 class homeAPI(APIView):
@@ -162,20 +88,25 @@ class homeAPI(APIView):
         return render(request, 'explore/index.html', context)
 
 
-def explore(request):
-#TODO
-    context = {
-        "Page" : 2,
+class exploreAPI(APIView):
+    def get(self, request):
+        pass
 
-    }
-   
-    return render(request, 'explore/explore.html', context)
+    def post(self, request):
+        pass
 
 
+class contactusAPI(APIView):
+    
+    def get(self, request):
+        m = ''    
+        context = {
+            "Page" : 3,
+            "m" : m
+        }
+        return render(request, 'explore/contactus.html', context)
 
-def contactus(request):
-    m = ''
-    if request.method == "POST":
+    def post(self, request):
         name = request.POST.get('name')
         email = request.POST.get('email')
         txtmassage = request.POST.get('massage')
@@ -188,9 +119,10 @@ def contactus(request):
             m = "پیام با موفقیت ارسال شد"
         except:
             m = "مشکلی به وجود آمده!  پیام ارسال نشد"
-    context = {
-        "Page" : 3,
-        "m" : m
-    }
-    return render(request, 'explore/contactus.html', context)
+
+        context = {
+            "Page" : 3,
+            "m" : m
+        }
+        return render(request, 'explore/contactus.html', context)
 
