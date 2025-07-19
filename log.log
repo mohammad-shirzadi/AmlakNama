@@ -278,3 +278,8 @@ django.db.utils.DataError: integer out of range
 2025-07-19 07:50:15,916: Created 505 records
 2025-07-19 07:50:16,022: Created 505 records
 2025-07-19 07:50:16,023: updateData/shp/polymean.shp is Created
+2025-07-19 08:38:16,536: Watching for file changes with StatReloader
+2025-07-19 08:39:21,352: /home/mohammad/w/AmlakNama/explore/urls.py changed, reloading.
+2025-07-19 08:39:22,714: Watching for file changes with StatReloader
+2025-07-19 08:57:09,523: /home/mohammad/w/AmlakNama/explore/__init__.py changed, reloading.
+2025-07-19 08:57:11,458: Watching for file changes with StatReloader
