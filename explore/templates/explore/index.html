@@ -14,11 +14,11 @@
         <div class="dashboard">
             <div class="subdash">
                 <form action="{% url 'home' %}" method="POST" class="col">{% csrf_token %}
-                    <input type="submit" class="{% if lu == 'res' %} lubtn act {% else %} lubtn {% endif %}" name="res" value="مسکونی">
-                    <input type="submit" class="{% if lu == 'resland' %} lubtn act {% else %} lubtn {% endif %}" name="resland" value="زمین مسکونی">
-                    <input type="submit" class="{% if lu == 'com' %} lubtn act {% else %} lubtn {% endif %}" name="com" value="تجاری">
-                    <input type="submit" class="{% if typ == 'buy' %} lubtn act {% else %} lubtn {% endif %}" name="buy" value="خرید و فروش">
-                    <input type="submit" class="{% if typ == 'rent' %} lubtn act {% else %} lubtn {% endif %}" name="rent" value="رهن و اجاره">
+                    <button type="submit" class="{% if lu == 'res' %} lubtn act {% else %} lubtn {% endif %}" name="land" value="res">مسکونی</button>
+                    <button type="submit" class="{% if lu == 'resland' %} lubtn act {% else %} lubtn {% endif %}" name="land" value="resland">زمین مسکونی</button>
+                    <button type="submit" class="{% if lu == 'com' %} lubtn act {% else %} lubtn {% endif %}" name="land" value="com">تجاری</button>
+                    <button type="submit" class="{% if typ == 'buy' %} lubtn act {% else %} lubtn {% endif %}" name="typ" value="buy">خرید و فروش</button>
+                    <button type="submit" class="{% if typ == 'rent' %} lubtn act {% else %} lubtn {% endif %}" name="typ" value="rent">رهن و اجاره</button>
                 </form>
             </div>
             <div class="subdash">

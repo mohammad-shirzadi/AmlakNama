@@ -348,8 +348,8 @@ def update(landuse, ptype):
     log('update(%s, %s) is run.'% (landuse,ptype))
     for grand_dict in GRAND_DICT:
         if grand_dict["landuse"] == landuse and grand_dict["ptype"] == ptype:
-            grdict['update_status'] = 'active'
             grdict = grand_dict
+            grdict['update_status'] = 'active'
     if not grdict:
         raise "grdict is not defined. "
 
@@ -604,7 +604,7 @@ def makeshape(modeladmin, request, queryset):
         lm.save(strict=True, verbose=verbose)
 
     geoprocsseing(create_point(queryset))
-    Insert()
+    #Insert()
 
 
 #STOP UPDATE

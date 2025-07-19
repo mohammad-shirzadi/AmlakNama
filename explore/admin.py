@@ -5,7 +5,7 @@ from explore.models import MahalatTehran, MTPPolygon, masages
 class MahalatTehranAdmin(admin.GISModelAdmin):
     list_display = ["name_mahal","reg_no"]
 
-class MTPAdmin(admin.GISModelAdmin):
+class MTPPolygonAdmin(admin.GISModelAdmin):
     list_display = ["landuse","ptype","name_mahal", "price", "reg_no"]
 
 class massage(normaladmin.ModelAdmin):
@@ -14,7 +14,7 @@ class massage(normaladmin.ModelAdmin):
 # Register your models here.
 #admin.site.register(pointshp, admin.ModelAdmin)
 admin.site.register(MahalatTehran, MahalatTehranAdmin)
-admin.site.register(MTPPolygon, MTPAdmin)
+admin.site.register(MTPPolygon, MTPPolygonAdmin)
 normaladmin.site.register(masages,massage)
 
 
