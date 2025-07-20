@@ -58,7 +58,8 @@ def createmap(lu='res',typ='buy',reg=0,tile="CartoDB positron"):
     maxp = numpy.max(lp)
     minp = numpy.min(lp)
     meanp = numpy.mean(lp)
-    d = {
+    data = {
+        "Page" : 1,
         'RegionList' : numpy.unique(lr),
         'RNList' : reglist,
         'RMList' : regmean,
@@ -70,6 +71,12 @@ def createmap(lu='res',typ='buy',reg=0,tile="CartoDB positron"):
         'MeanPrice' : "{:,}".format(int(meanp)),
         'MinPrice' : "{:,}".format(int(minp)),
         'NameMinPrice' : ln[lp.index(minp)],
+        'lu' : lu,
+        'typ' : typ,
+        'reg' : reg,
+        'Tiles' : ["OpenStreetMap", "CartoDB positron", "CartoDB dark_matter"],
+        'ActiveTile' : tile,
     }
-    return d
+
+    return data
 
