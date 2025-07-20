@@ -5,87 +5,34 @@ from .services import createmap
 from  explore.models import masages
 
 from rest_framework.views import APIView
+from rest_framework import serializers
 
 
-
-
-LU = 'res'
-TYP = 'buy'
-REG = 0
-I = "CartoDB positron"
-ALLTILE = ["OpenStreetMap", "CartoDB positron", "CartoDB dark_matter"]
 
 
 class homeAPI(APIView):
-    
-    global LU , TYP , REG ,I, ALLTILE
-    
+        
+    class paramSerializer(serializers.Serializer):
+        land = serializers.CharField(required= False, max_length = 8,default='res')
+        typ = serializers.CharField(required= False,max_length = 4, default='buy')
+        reg = serializers.IntegerField(required= False, default=0)
+        bgmp = serializers.CharField(required= False, default='CartoDB positron')
+
+
     def get(self, request):
-        dt = createmap(lu=LU,typ=TYP,reg=REG,tile=I)
-        context = {
-            "Page" : 1,
-            'RegionList' : dt['RegionList'],
-            'FRegionList' : dt['FRegionList'],
-            'NameList' : dt['NameList' ],
-            'PriceList' : dt['PriceList'],
-            'MaxPrice' : dt['MaxPrice' ],
-            "NameMaxPrice" : dt['NameMaxPrice'],
-            'MeanPrice' : dt['MeanPrice'],
-            'MinPrice' : dt['MinPrice' ],
-            'NameMinPrice' : dt['NameMinPrice'],
-            'lu' : LU,
-            'typ' : TYP,
-            'reg' : REG,
-            'Tiles' : ALLTILE,
-            'ActiveTile' : I,
-            'RNList' : dt['RNList'],
-            'RMList' : dt['RMList'],
-        }
-        
-        return render(request, 'explore/index.html', context)
+        print(request.query_params)
+        data = self.paramSerializer(data=request.query_params)
+        data.is_valid(raise_exception=True)
+        map = createmap(
+            lu=data.validated_data.get('land'),
+            typ=data.validated_data.get('typ'),
+            reg=data.validated_data.get('reg'),
+            tile=data.validated_data.get('bgmp')
+            )
 
-    def post(self, request):
-        
-        LU = request.POST.get('land') if request.POST.get('land') else 'res'
-        TYP = request.POST.get('typ') if request.POST.get('typ') else 'buy'
-        REG = int(request.POST.get('reg')) if request.POST.get('reg') else 0
-        I = request.POST.get('bgmp') if request.POST.get('bgmp') else "CartoDB positron"
-        
-        if LU == 'resland' and TYP == "rent":
-            TYP = 'buy'
-        
-        if not request.POST.get('bgmp') and request.POST.get('bgmp') in ALLTILE:
-            I = "CartoDB positron"
-        
-        dt = createmap(lu=LU,typ=TYP,reg=REG,tile=I)       
+        return render(request, 'explore/index.html', map)
 
-        #'RegionList' : lr,
-        #'NameList' : ln,
-        #'PriceList' : lp,
-        #'MaxPrice' : maxp,
-        #'MeanPrice' : meanp,
-        #'MinPrice' : minp,
 
-        context = {
-            "Page" : 1,
-            'RegionList' : dt['RegionList'],
-            'FRegionList' : dt['FRegionList'],
-            'NameList' : dt['NameList' ],
-            'PriceList' : dt['PriceList'],
-            'MaxPrice' : dt['MaxPrice' ],
-            "NameMaxPrice" : dt['NameMaxPrice'],
-            'MeanPrice' : dt['MeanPrice'],
-            'MinPrice' : dt['MinPrice' ],
-            'NameMinPrice' : dt['NameMinPrice'],
-            'lu' : LU,
-            'typ' : TYP,
-            'reg' : REG,
-            'Tiles' : ALLTILE,
-            'ActiveTile' : I,
-            'RNList' : dt['RNList'],
-            'RMList' : dt['RMList'],
-        }
-        return render(request, 'explore/index.html', context)
 
 
 class exploreAPI(APIView):

@@ -13,7 +13,7 @@
         
         <div class="dashboard">
             <div class="subdash">
-                <form action="{% url 'home' %}" method="POST" class="col">{% csrf_token %}
+                <form action="{% url 'home' %}" method="get" class="col">
                     <button type="submit" class="{% if lu == 'res' %} lubtn act {% else %} lubtn {% endif %}" name="land" value="res">مسکونی</button>
                     <button type="submit" class="{% if lu == 'resland' %} lubtn act {% else %} lubtn {% endif %}" name="land" value="resland">زمین مسکونی</button>
                     <button type="submit" class="{% if lu == 'com' %} lubtn act {% else %} lubtn {% endif %}" name="land" value="com">تجاری</button>
