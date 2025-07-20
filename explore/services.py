@@ -1,4 +1,5 @@
 import geopandas, numpy
+from  explore.models import masages
 
 
 
@@ -80,3 +81,6 @@ def createmap(lu='res',typ='buy',reg=0,tile="CartoDB positron"):
 
     return data
 
+def message(name, email, txtmessage):
+    masages.objects.create(name=name,email=email,txtmasages=txtmessage,)
+    return "پیام با موفقیت ارسال شد"

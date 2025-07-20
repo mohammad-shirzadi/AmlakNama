@@ -1,9 +1,9 @@
 #-*- coding: UTF-8 -*-
 
 from django.shortcuts import render
-from .services import createmap
-from  explore.models import masages
+from .services import createmap,message
 
+from  explore.models import masages
 from rest_framework.views import APIView
 from rest_framework import serializers
 
@@ -44,7 +44,11 @@ class exploreAPI(APIView):
 
 
 class contactusAPI(APIView):
-    
+    class messageSeerializer(serializers.ModelSerializer):
+        class meta:
+            model = masages
+            field = "__all__"
+            
     def get(self, request):
         m = ''    
         context = {
@@ -54,22 +58,21 @@ class contactusAPI(APIView):
         return render(request, 'explore/contactus.html', context)
 
     def post(self, request):
-        name = request.POST.get('name')
-        email = request.POST.get('email')
-        txtmassage = request.POST.get('massage')
+        dataserialized = self.messageSeerializer(data=request.data)
+        dataserialized.is_valid(raise_exception=True)
+
         try:
-            masages.objects.create(
-                name=name,
-                email=email,
-                txtmasages=txtmassage,
+            response = message(
+                name=dataserialized.validated_data.get('name'),
+                email=dataserialized.validated_data.get('email'),
+                txtmessage=dataserialized.validated_data.get('txtmessage')
             )
-            m = "پیام با موفقیت ارسال شد"
         except:
-            m = "مشکلی به وجود آمده!  پیام ارسال نشد"
+            response = "مشکلی به وجود آمده!  پیام ارسال نشد"
 
         context = {
             "Page" : 3,
-            "m" : m
+            "m" : response
         }
         return render(request, 'explore/contactus.html', context)
 
