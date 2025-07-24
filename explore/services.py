@@ -23,27 +23,17 @@ def createmap(lu='res',typ='buy',reg=0,tile="CartoDB positron"):
     fmp = Pgdf.query(f'landuse == "{lu}" and ptype == "{typ}"')
 
     m = mp.explore(
-        column="price",
-        scheme='naturalbreaks',
-        legend=False,
-        k=50,
-        tooltip=False,
-        popup=popupf,
-        legend_kwds=dict(colorebar=False),
-        #name= l + '-' + t,
-        tiles=tile,
-        zoom_control=False,
-        zoom=11
+        column="price",  scheme='naturalbreaks',  legend=False,
+        k=50,            tooltip=False,           popup=popupf,
+        legend_kwds=dict(colorebar=False),        #name= l + '-' + t,
+        tiles=tile,      zoom_control=False,      zoom=11
     )
     Tgdf.explore(
-    m=m,
-    color='None',
-    tooltip=False,
-    popup=['NAME_MAHAL'],
+    m=m, color='None', tooltip=False, popup=['NAME_MAHAL'],
     style_kwds={
         'color':'Black',
         'weight': 1,
-        }   
+        }
     )
     
     m.save(r"explore/static/explore/map/myhtml.html")
