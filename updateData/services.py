@@ -321,6 +321,8 @@ def not_duplicate(propertyModel,output):
         return True
 
 def insert(propertyModel,output):
+
+    #### TODO no need to create like below add **output
     try:
         propertyModel.objects.create(
             landuse=output['landuse'], 
