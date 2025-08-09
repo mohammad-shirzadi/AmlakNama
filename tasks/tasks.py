@@ -1,8 +1,11 @@
 from celery import shared_task
-from updateData.services import makeshape
+from updateData.services import update
+
 
 @shared_task
-def MakeShape(modeladmin, request, queryset):
-    return makeshape(modeladmin, request, queryset)
-
-
+def updatedata():
+    update('res', 'buy')
+    update('res', 'rent')
+    update('resland', 'buy')
+    update('com', 'buy')
+    update('com', 'rent')
