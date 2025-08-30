@@ -324,21 +324,8 @@ def insert(propertyModel,output):
 
     #### TODO no need to create like below add **output
     try:
-        propertyModel.objects.create(
-            landuse=output['landuse'], 
-            ptype=output['ptype'], 
-            price=output['price'], 
-            area=output['Area'], 
-            Cyear=output['CYear'], 
-            mortgage=output['mortgage'], 
-            rent=output['rent'], 
-            lat=repr(output['lat']), 
-            lon=repr(output['lon']), 
-            mahale=output['mahale'], 
-            exp=output['exp'], 
-            link=output['link'], 
-            date_time=output['date_time']
-        )
+        propertyModel.objects.create(**output)
+
     except Exception as error:
         log(f'[{output['landuse']}- {output['ptype']}] - in insert step errore: {str(error)} -- {str(output)}.')
         raise Exception
@@ -463,8 +450,8 @@ def update(landuse, ptype):
                 log(f'[{landuse}- {ptype}] - {Plink} - have no price')
                 continue
             
-            output['lat'] = xy[0]
-            output['lon'] = xy[1]
+            output['lat'] = repr(xy[0])
+            output['lon'] = repr(xy[1])
             output['mahale'] = get_district(page_source)
             output['exp'] = get_exp(page_source)
             output['link'] = Plink
