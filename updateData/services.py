@@ -305,12 +305,12 @@ def not_duplicate(propertyModel,output):
         landuse=output['landuse'], 
         ptype=output['ptype'], 
         price=output['price'], 
-        area=output['Area'], 
-        Cyear=output['CYear'], 
+        area=output['area'], 
+        Cyear=output['Cyear'], 
         mortgage=output['mortgage'], 
         rent=output['rent'], 
-        lat=repr(output['lat']), 
-        lon=repr(output['lon']), 
+        lat=(output['lat']), 
+        lon=(output['lon']), 
         mahale=output['mahale'], 
         exp=output['exp'], 
         link=output['link'], 
@@ -359,7 +359,7 @@ def update(landuse, ptype):
     for Pcase in Pcases:
         output = {
             'landuse': landuse, 'ptype' : ptype, 'price' : None,
-            'Area': None,         'CYear': None,     'mortgage': None,
+            'area': None,         'Cyear': None,     'mortgage': None,
             'rent': None,         'lat': None,       'lon' : None,
             'mahale': None,       'exp': None,       'link' : None,
             'date_time' : None
@@ -407,13 +407,13 @@ def update(landuse, ptype):
                     d1 = (soup1.find_all(opt[0],class_ = opt[1]))
                     d2 = d1[opt[2]]
                     data = d2.get_text('thead').split('thead')
-                    output['Area'] = int(data[3])
-                    output['CYear'] = data[4]
+                    output['area'] = int(data[3])
+                    output['Cyear'] = data[4]
 
                 elif grdict['find_key']['buy_price'] == 'price_area':
-                    output['price'], output['Area'] = get_buyPrice(page_source)
-                    output['Area'] = int(output['Area'])
-                    output['CYear'] = 0
+                    output['price'], output['area'] = get_buyPrice(page_source)
+                    output['area'] = int(output['area'])
+                    output['Cyear'] = 0
 
             elif 'rent_price' in grdict['find_key']:
                 output['mortgage'], output['rent'] = get_rentPrice(page_source)
@@ -427,8 +427,8 @@ def update(landuse, ptype):
                 style = soup1.find_all(opt['style_findall'][0] , class_= opt['style_findall'][1])
                 if style:
                     prices = soup1.find_all(opt['styled_findall'][0] , class_= opt['styled_findall'][1])
-                    output['Area'] = int(prices[0].get_text())
-                    output['CYear'] = prices[1].get_text()
+                    output['area'] = int(prices[0].get_text())
+                    output['Cyear'] = prices[1].get_text()
 
                 elif not style:
                     FArea = soup1.find_all(opt['notstyled_findall'][0], class_= opt['notstyled_findall'][1])[opt['notstyled_findall'][2]]
@@ -436,20 +436,19 @@ def update(landuse, ptype):
 
                     for i in range(len(F)):
                         if 'متراژ' in F[i]:
-                            output['Area'] = int(F[int(i+ (len(F)/2))])
+                            output['area'] = int(F[int(i+ (len(F)/2))])
                         elif 'ساخت' in F[i]:
-                            output['CYear'] = F[int(i+ (len(F)/2))]
+                            output['Cyear'] = F[int(i+ (len(F)/2))]
                 
                 if output['mortgage'] is None and output['rent'] is None:
                     log(f'[{landuse}- {ptype}] - {Plink} - have no price')
                     continue
                 
-                output['price'] = int((output['mortgage'] + (output['rent']*30))/int(output['Area']))
+                output['price'] = int((output['mortgage'] + (output['rent']*30))/int(output['area']))
             
             if not output['price']:
                 log(f'[{landuse}- {ptype}] - {Plink} - have no price')
                 continue
-            
             output['lat'] = repr(xy[0])
             output['lon'] = repr(xy[1])
             output['mahale'] = get_district(page_source)
@@ -465,6 +464,7 @@ def update(landuse, ptype):
                 log(Plink + ' is duplicate')
                 
         except Exception as ex:
+            log('inja')
             log(str(ex)+Plink)
             grdict['update_status'] = 'deactive'
             raise Exception
