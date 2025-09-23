@@ -1,4 +1,43 @@
-2025-07-25 13:04:01,706: Watching for file changes with StatReloader
-2025-08-30 11:59:00,627: Watching for file changes with StatReloader
-2025-08-30 12:11:22,503: Watching for file changes with StatReloader
-2025-08-30 12:13:22,817: Watching for file changes with StatReloader
+2025-09-23 14:00:19,737: update(com, buy) is run.
+2025-09-23 14:00:20,106: [com- buy] - get 22 Pcasses
+2025-09-23 14:00:31,162: [com- buy] - https://divar.ir/v/%D9%81%D8%B1%D9%88%D8%B4-%D8%B3%D8%B1%D9%82%D9%81%D9%84%DB%8C-%D8%B3%DA%A9%D9%87-%D9%88-%D8%A7%D8%B1%D8%B2-%D8%B5%D8%B1%D8%A7%D9%81%DB%8C-%D8%A2%D8%B4%D9%BE%D8%B2%D8%AE%D8%A7%D9%86%D9%87/Aa_euAX1 - have no price
+2025-09-23 14:00:42,397: [com- buy] Case 2/22 & 1 Case inserted
+2025-09-23 14:00:53,510: in retrying 0 result not founded.
+2025-09-23 14:01:05,528: in retrying 1 result not founded.
+2025-09-23 14:01:17,054: in retrying 2 result not founded.
+2025-09-23 14:01:27,789: [com- buy] - https://divar.ir/v/2000%D9%85%D8%AA%D8%B1%D9%85%D9%84%DA%A9-%D8%B5%D9%86%D8%B9%D8%AA%DB%8C-%D8%A8%D8%B1-%D9%85%D8%AE%D8%B5%D9%88%D8%B5/Aa_a1Fgg - have no loc
+2025-09-23 14:01:39,074: [com- buy] Case 4/22 & 2 Case inserted
+2025-09-23 14:01:50,095: [com- buy] Case 5/22 & 3 Case inserted
+2025-09-23 14:02:01,278: [com- buy] Case 6/22 & 4 Case inserted
+2025-09-23 14:02:12,250: in retrying 0 result not founded.
+2025-09-23 14:02:23,083: in retrying 1 result not founded.
+2025-09-23 14:02:33,896: in retrying 2 result not founded.
+2025-09-23 14:02:45,116: [com- buy] Case 7/22 & 5 Case inserted
+2025-09-23 14:02:56,202: [com- buy] Case 8/22 & 6 Case inserted
+2025-09-23 14:03:07,377: [com- buy] Case 9/22 & 7 Case inserted
+2025-09-23 14:03:18,311: [com- buy] - https://divar.ir/v/%DB%B9%DB%B0-%D9%85%D8%AA%D8%B1-%D8%AA%D8%AC%D8%A7%D8%B1%DB%8C-%D8%A8%D8%B1-%D8%A7%D8%B5%D9%84%DB%8C-%D8%B3%D8%AA%D8%A7%D8%B1%D8%AE%D8%A7%D9%86/Aa8aTyNY - has map is false.
+2025-09-23 14:03:29,045: [com- buy] - https://divar.ir/v/%DB%B1%DB%B4%DB%B8%D9%85%D8%AA%D8%B1%DB%B3%D8%AE%D9%88%D8%A7%D8%A8-%D8%AA%DA%A9%D9%88%D8%A7%D8%AD%D8%AF%DB%8C-%DA%A9%D9%84%DB%8C%D8%AF%D9%86%D8%AE%D9%88%D8%B1%D8%AF%D9%87-%D9%81%D9%88%D9%84-%D8%A7%D9%85%DA%A9%D8%A7%D9%86%D8%A7%D8%AA/Aa4yAYxm - has map is false.
+2025-09-23 14:03:40,283: in retrying 0 result not founded.
+2025-09-23 14:03:51,414: [com- buy] Case 12/22 & 8 Case inserted
+2025-09-23 14:04:02,558: [com- buy] Case 13/22 & 9 Case inserted
+2025-09-23 14:04:13,703: [com- buy] Case 14/22 & 10 Case inserted
+2025-09-23 14:04:24,519: [com- buy] - https://divar.ir/v/%D9%85%D8%BA%D8%A7%D8%B2%D9%87-%DB%B2%DB%B6-%D9%85%D8%AA%D8%B1%DB%8C-%D8%B4%D8%A7%D8%AF%D8%A2%D8%A8%D8%A7%D8%AF/AaST6GX8 - has map is false.
+2025-09-23 14:04:36,270: in retrying 0 result not founded.
+2025-09-23 14:04:47,401: in retrying 1 result not founded.
+2025-09-23 14:04:58,581: [com- buy] Case 16/22 & 11 Case inserted
+2025-09-23 14:05:09,652: [com- buy] Case 17/22 & 12 Case inserted
+2025-09-23 14:05:20,930: [com- buy] Case 18/22 & 13 Case inserted
+2025-09-23 14:05:32,061: in retrying 0 result not founded.
+2025-09-23 14:05:43,129: in retrying 1 result not founded.
+2025-09-23 14:05:53,953: in retrying 2 result not founded.
+2025-09-23 14:06:05,172: [com- buy] Case 19/22 & 14 Case inserted
+2025-09-23 14:06:16,265: [com- buy] Case 20/22 & 15 Case inserted
+2025-09-23 14:06:27,364: [com- buy] Case 21/22 & 16 Case inserted
+2025-09-23 14:06:38,897: in retrying 0 result not founded.
+2025-09-23 14:06:50,029: in retrying 1 result not founded.
+2025-09-23 14:07:01,266: in retrying 2 result not founded.
+2025-09-23 14:07:12,618: [com- buy] Case 22/22 & 17 Case inserted
+2025-09-23 14:07:12,618: com, buy UPDATED!
+2025-09-23 14:07:12,618: update('com','buy') is done
+2025-09-23 14:09:11,916: /home/mohammad/w/AmlakNama/updateData/services.py changed, reloading.
+2025-09-23 14:09:13,015: Watching for file changes with StatReloader
