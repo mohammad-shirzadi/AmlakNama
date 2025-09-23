@@ -15,7 +15,7 @@ from selenium import webdriver
 
 
 
-DRIVER_BROWSER = 'chrome'
+DRIVER_BROWSER = 'edge'
 DRIVER_TIMEOUT = 30
 RETRY_SLEEP_TIME = 10
 RETRY = 3
