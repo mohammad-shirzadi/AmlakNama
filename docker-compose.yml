@@ -20,7 +20,7 @@ services:
       context: .
       dockerfile: docker/dockerfile
     command: >
-      sh -c "dpkg -i microsoft-edge-stable_136.0.3240.92-1_amd64.deb"
+      sh -c "dpkg -i microsoft-edge-stable_138.0.3351.83-1_amd64.deb &&
              python manage.py makemigrations &&
              python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000"
