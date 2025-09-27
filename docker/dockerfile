@@ -6,17 +6,18 @@ RUN apt-get update && apt-get install -y \
     libproj-dev \
     gdal-bin \
     libgdal-dev \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* 
+    
+    ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
+    ENV C_INCLUDE_PATH=/usr/include/gdal
+    
+    WORKDIR /app
+    COPY . .
+    
+RUN pip install --upgrade pip \
+    && pip install -r requirement.txt
 
-ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
-ENV C_INCLUDE_PATH=/usr/include/gdal
-
-WORKDIR /app
-COPY . .
-
-RUN pip install --upgrade pip \ 
-&& pip install -r requirement.txt
-
-
-
-
+RUN apt-get update \
+    && apt-get install -y ./microsoft-edge-stable_138.0.3351.83-1_amd64.deb \
+    && apt --fix-broken install -y \
+    && apt-get install -y ./microsoft-edge-stable_138.0.3351.83-1_amd64.deb
