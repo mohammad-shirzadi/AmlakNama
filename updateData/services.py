@@ -117,7 +117,7 @@ def start_driver(browser=DRIVER_BROWSER,driver_timeout=DRIVER_TIMEOUT):
             with open(r"msedgedriver.txt", 'r') as file:
                 PathECDM = file.read().strip()
         else:
-            PathECDM = EdgeChromiumDriverManager().install()
+            PathECDM = EdgeChromiumDriverManager(url='https://msedgedriver.microsoft.com', latest_release_url='https://msedgedriver.microsoft.com/LATEST_RELEASE').install()
             with open(r"msedgedriver.txt", 'w') as file:
                 file.write(PathECDM)
 
