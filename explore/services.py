@@ -1,12 +1,42 @@
 import geopandas, numpy
+from shapely import wkt
 from  explore.models import masages
+
+from explore.models import MTPPolygon, MahalatTehran
 
 
 
 
 def createmap(lu='res',typ='buy',reg=0,tile="CartoDB positron"):
-    Pgdf = geopandas.read_file(r"updateData/shp/polymean.shp")
-    Tgdf = geopandas.read_file(r"updateData/shp/StaticShape/Mahalat_Tehran.shp")
+    pqs = MTPPolygon.objects.all()
+    data = []
+    for r in pqs:
+        data.append({
+             "landuse": r.landuse,
+             "ptype": r.ptype,
+             "price": r.price,
+             "mortgage": r.mortgage,
+             "rent": r.rent,
+             "NAME_MAHAL": r.name_mahal,
+             "reg_no":r.reg_no,
+             "geometry":wkt.loads(r.geom.wkt)
+             })
+    Pgdf = geopandas.GeoDataFrame(data=data,crs='EPSG:32639')
+
+    tqs = MahalatTehran.objects.all()
+    data = []
+    for r in tqs:
+        data.append({
+             "NAME_MAHAL": r.name_mahal,
+             "reg_no":r.reg_no,
+             "shape_le_1": r.shape_le_1,
+             "shape_area": r.shape_area,
+             "geometry":wkt.loads(r.geom.wkt)
+             })
+    Tgdf = geopandas.GeoDataFrame(data=data,crs='EPSG:32639')
+
+    #Pgdf = geopandas.read_file(r"updateData/shp/polymean.shp")
+    #Tgdf = geopandas.read_file(r"updateData/shp/StaticShape/Mahalat_Tehran.shp")
     fieldR = ['NAME_MAHAL','price', 'mortgage', 'rent']
     fieldB = ['NAME_MAHAL','price']
 

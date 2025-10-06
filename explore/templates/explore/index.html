@@ -22,7 +22,7 @@
                 </form>
             </div>
             <div class="subdash">
-                <form action="{% url 'home' %}" method="POST" id="regionForm" class="col">{% csrf_token %}
+                <form action="{% url 'home' %}" method="get" id="regionForm" class="col">{% csrf_token %}
                     <label for="1"> انتخاب منطقه </label>
                     <select name="reg" id="1" onchange="submitForm()">
                         <option name ="reg" value="0" {% if reg == 0 %} selected {% endif %}>تمام مناطق</option>
