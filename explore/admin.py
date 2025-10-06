@@ -4,9 +4,12 @@ from explore.models import MahalatTehran, MTPPolygon, masages
 
 class MahalatTehranAdmin(admin.GISModelAdmin):
     list_display = ["name_mahal","reg_no"]
+    list_filter = ["reg_no"]
 
 class MTPPolygonAdmin(admin.GISModelAdmin):
     list_display = ["landuse","ptype","name_mahal", "price", "reg_no"]
+    list_filter = ["landuse","ptype", "name_mahal"]
+
 
 class massage(normaladmin.ModelAdmin):
     list_display = ["name","email","txtmasages"]
