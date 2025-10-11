@@ -11,8 +11,8 @@ async function status() {
 
     for (let i = 1; i < 6; i++) {
         const element = document.getElementById(`status-${i}`);
-        if (element && statustext[i] !== undefined) {
-            element.innerText = statustext[i];
+        if (element && statustext[i-1] !== undefined) {
+            element.innerText = statustext[i-1];
         }
     }
 }
