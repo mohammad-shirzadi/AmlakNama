@@ -1,8 +1,9 @@
 #-*- coding: UTF-8 -*-
 from django.shortcuts import render
 from django.http import JsonResponse
-from .services import logreader, cdt, stop_update, status_reader, ThradedUpdate
-import threading
+from .services import logreader, cdt, stop_update, status_reader, update
+from tasks.tasks import updatedata
+#import threading
 
 from rest_framework.views import APIView
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
@@ -35,9 +36,12 @@ class updateData_API(APIView):
     def post(self, request):
         if request.POST.get('land_typ'):
             land_types = request.POST.getlist('land_typ')
-            for land_typ in land_types:
-                [land, typ] = land_typ.split('-')
-                threading.Thread(target=ThradedUpdate, args=(land,typ)).start()
+            updatedata.delay(land_types)
+            #for land_typ in land_types:
+            #    [land, typ] = land_typ.split('-')
+            #   update(land, typ)
+                
+                #threading.Thread(target=ThradedUpdate, args=(land,typ)).start()
             return render(request,'admin/updatePg.html')
         
         elif request.POST.get('LogKey'):

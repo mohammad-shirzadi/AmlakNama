@@ -1,4 +1,6 @@
+import os
 
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', default='amqp://guest:guest@localhost//')
 CELERY_RESULT_BACKEND = 'django-db'
 
 CELERY_TIMEZONE = "UTC"

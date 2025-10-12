@@ -329,26 +329,30 @@ def insert(propertyModel,output):
     except Exception as error:
         log(f'[{output['landuse']}- {output['ptype']}] - in insert step errore: {str(error)} -- {str(output)}.')
         raise Exception
-    
+
+
 
 #GET_DATA_UPDATE
+
+def update_status(landuse, ptype, activat):    
+    for grand_dict in GRAND_DICT:
+        if grand_dict["landuse"] == landuse and grand_dict["ptype"] == ptype:
+            grdict = grand_dict
+            if activat == False:
+                grdict['update_status'] = 'active'
+            elif activat == True:
+                grdict['update_status'] = 'deactive'
+
 def update(landuse, ptype):
     global STOPSIGN 
+    grdict = {}
+    insert_counter = 0
+
     log('update(%s, %s) is run.'% (landuse,ptype))
     for grand_dict in GRAND_DICT:
         if grand_dict["landuse"] == landuse and grand_dict["ptype"] == ptype:
             grdict = grand_dict
-            grdict['update_status'] = 'active'
-    if not grdict:
-        raise "grdict is not defined. "
-
-    if STOPSIGN:
-        log(f'[{landuse}- {ptype}] - update is stopped. ')
-        STOPSIGN=False
-        grdict['update_status'] = 'deactive'
-        return None
     
-    insert_counter = 0
     Pcases = get_PropertyCases(grdict['url'])
 
     if not Pcases:
@@ -365,11 +369,6 @@ def update(landuse, ptype):
             'date_time' : None
         }
         
-        if STOPSIGN:
-            log('update(%s, %s) is stopped.'% (landuse,ptype))
-            STOPSIGN=False
-            grdict['update_status'] = 'deactive'
-            return None
         
         try:
             Plink = 'https://divar.ir'+ Pcase.get('href')
@@ -464,12 +463,10 @@ def update(landuse, ptype):
                 log(Plink + ' is duplicate')
                 
         except Exception as ex:
-            log('inja')
             log(str(ex)+Plink)
-            grdict['update_status'] = 'deactive'
             raise Exception
-            #continue
-    grdict['update_status'] = 'deactive'
+        
+
     log(landuse+', '+ptype+' UPDATED!')
 
 def cdt(lu: str, typ:str) -> list:
@@ -481,14 +478,14 @@ def cdt(lu: str, typ:str) -> list:
         lastupdate = "بروز رسانی نشده"
     return [count, lastupdate]
 
-def ThradedUpdate(land, typ):
-    try:
-        update(land, typ)
-        log(f"update('{land}','{typ}') is done")
-    except Exception as ex:
-        log(str(ex)+'----')
-        raise Exception
-
+#def ThradedUpdate(land, typ):
+#    try:
+#        update(land, typ)
+#        log(f"update('{land}','{typ}') is done")
+#    except Exception as ex:
+#        log(str(ex)+'----')
+#        raise Exception
+#
 
 #MakeShape
 @admin.action(description='create shpfiles')
