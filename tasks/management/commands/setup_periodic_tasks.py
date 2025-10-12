@@ -1,7 +1,7 @@
 from django.core.management import BaseCommand
 from django.db import transaction
 from django_celery_beat.models import CrontabSchedule, PeriodicTask,IntervalSchedule
-from tasks.tasks import updatedata as updatedata_task
+from tasks.tasks import periodic_updatedata as updatedata_task
 from django.utils.timezone import get_default_timezone_name
 
 
