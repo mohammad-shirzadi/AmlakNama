@@ -1,7 +1,7 @@
 #-*- coding: UTF-8 -*-
 from django.shortcuts import render
 from django.http import JsonResponse
-from .services import logreader, cdt, stop_update, status_reader, update
+from .services import logreader, cdt, status_reader
 from tasks.tasks import updatedata
 #import threading
 
@@ -16,7 +16,6 @@ class updateData_API(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-
         context = {
             "count_res_rent" : cdt('res','rent')[0],
             "lastupdateRR" : cdt('res','rent')[1],
@@ -36,7 +35,8 @@ class updateData_API(APIView):
     def post(self, request):
         if request.POST.get('land_typ'):
             land_types = request.POST.getlist('land_typ')
-            updatedata.delay(land_types)
+            updatedata.delay(land_types) # type: ignore
+            
             #for land_typ in land_types:
             #    [land, typ] = land_typ.split('-')
             #   update(land, typ)
@@ -50,7 +50,4 @@ class updateData_API(APIView):
         elif request.POST.get('PCStatus'):
             return JsonResponse({'PCStatus': status_reader()})
         
-        elif request.POST.get('stop'):
-            stop_update()
-            return render(request,'admin/updatePg.html')
 

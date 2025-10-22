@@ -77,16 +77,6 @@ async function submitUpdate(event) {
     }
 }
 
-async function stopTask() {
-    const response = await fetch(window.stopURL, {
-        method: "POST",
-        headers: { "X-CSRFToken": window.csrfToken },
-        body: new URLSearchParams({ 'csrfmiddlewaretoken': window.csrfToken, stop: 'stop' })
-    });
-
-    const result = await response.json();
-    alert(result.status || "Task stopped");
-}
 
 document.addEventListener("DOMContentLoaded", () => {
     setInterval(getlog, 1000);

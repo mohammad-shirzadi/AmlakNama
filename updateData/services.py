@@ -11,57 +11,359 @@ import re
 import requests
 import time
 from  bs4 import BeautifulSoup
-from selenium import webdriver
 
 
 
-DRIVER_BROWSER = 'edge'
-DRIVER_TIMEOUT = 30
-RETRY_SLEEP_TIME = 10
-RETRY = 3
-DRIVER = True
+#DRIVER_BROWSER = 'edge'
+#DRIVER_TIMEOUT = 30
+#RETRY_SLEEP_TIME = 10
+#RETRY = 3
+#DRIVER = True
 
-#DRIVER_BROWSER = os.environ.get('DRIVER_BROWSER',default='chrome')
-#DRIVER_TIMEOUT = int(os.environ.get('DRIVER_TIMEOUT',default=30))
-#RETRY_SLEEP_TIME = int(os.environ.get('RETRY_SLEEP_TIME',default=10))
-#RETRY = int(os.environ.get('RETRY',default=3))
-#DRIVER = bool(os.environ.get('DRIVER', default=True))
-
-
-STOPSIGN = False
+DRIVER_BROWSER = os.environ.get('DRIVER_BROWSER',default='edge')
+DRIVER_TIMEOUT = int(os.environ.get('DRIVER_TIMEOUT',default=30))
+RETRY_SLEEP_TIME = int(os.environ.get('RETRY_SLEEP_TIME',default=10))
+RETRY = int(os.environ.get('RETRY',default=3))
+DRIVER = bool(os.environ.get('DRIVER', default=True))
 
 GRAND_DICT = [
     {"landuse":"res", "ptype":"buy", "url":"https://divar.ir/s/tehran/buy-apartment",
-     'find_key':{"findall":['table',"kt-group-row",0], 'buy_price':'price'},
-     "update_status":"deactive" },
-
+    'find_key':{"findall":['table',"kt-group-row",0], 'buy_price':'price'},
+    "update_status":"deactive" },
     {"landuse":"com", "ptype":"buy","url":"https://divar.ir/s/tehran/buy-commercial-property",
-     'find_key':{"findall":['table',"kt-group-row",0],'buy_price':'price'},
-     "update_status":"deactive" },
-
+    'find_key':{"findall":['table',"kt-group-row",0],'buy_price':'price'},
+    "update_status":"deactive" },
     {"landuse":"resland", "ptype":"buy","url":"https://divar.ir/s/tehran/buy-old-house",
-     'find_key':{"findall":['table',"kt-group-row",0],'buy_price':'price_area'},
-     "update_status":"deactive"},
-
+    'find_key':{"findall":['table',"kt-group-row",0],'buy_price':'price_area'},
+    "update_status":"deactive"},
     {"landuse":"res", "ptype":"rent","url":"https://divar.ir/s/tehran/rent-residential",
-     'find_key':{"style_findall":['input',"kt-range-slider__input"],
-                 "styled_findall":['td','kt-group-row-item kt-group-row-item__value kt-group-row-item--info-row'],
-                 "notstyled_findall":['table','kt-group-row',0],
-                 'rent_price':'mortgage_rent'},
-     "update_status":"deactive" },
-
+    'find_key':{"style_findall":['input',"kt-range-slider__input"],
+                "styled_findall":['td','kt-group-row-item kt-group-row-item__value kt-group-row-item--info-row'],
+                "notstyled_findall":['table','kt-group-row',0],
+                'rent_price':'mortgage_rent'},
+    "update_status":"deactive" },
     {"landuse":"com", "ptype":"rent","url":"https://divar.ir/s/tehran/rent-commercial-property",
-     'find_key':{"style_findall":['input',"kt-range-slider__input"],
-                 "styled_findall":['td','kt-group-row-item kt-group-row-item__value kt-group-row-item--info-row'],
-                 "notstyled_findall":['table','kt-group-row',0],
-                 'rent_price':'mortgage_rent'},
-     "update_status":"deactive" },
+    'find_key':{"style_findall":['input',"kt-range-slider__input"],
+                "styled_findall":['td','kt-group-row-item kt-group-row-item__value kt-group-row-item--info-row'],
+                "notstyled_findall":['table','kt-group-row',0],
+                'rent_price':'mortgage_rent'},
+    "update_status":"deactive" },
 ]
+
+
+class Property:    
+
+    def set_soup1(self):
+        self.soup1 = BeautifulSoup(self.page_source, 'html.parser')
+    
+    def get_loc(self,pg_source=None) -> list[float] | None:
+        _pg_source = self.page_source if pg_source is None else pg_source
+        pr_data = str(_pg_source)
+        lat_ = re.search(r'"latitude"\s*:\s*"?(?P<lat>\d+\.?\d*)"?', pr_data)
+        long_ = re.search(r'"longitude"\s*:\s*"?(?P<long>\d+\.?\d*)"?', pr_data)
+        if lat_ and long_:
+            lat = float(lat_.groups()[0])
+            long = float(long_.groups()[0])
+            return [lat,long]
+        return None
+    
+    def has_map(self) -> bool:
+        img = self.soup1.find_all('img', alt='موقعیت مکانی')
+        if img:
+            return True
+        else:
+            return False
+
+    def get_buyPrice(self) -> list | None:
+        sections = self.soup1.find_all('div', class_ = "kt-base-row kt-base-row--large kt-unexpandable-row")
+
+        for section in sections:
+            num = re.search(r'\d[\d\u066C]*',section.get_text())
+            if not num:
+                pass
+
+            elif re.match(r'۱{1,3}(٬۱{3})+$', num.group().replace('\u066C', '')):
+                return [None, None]
+            #####TODO getprice validation
+            elif "قیمت هر متر" in section.get_text():
+                num = num.group().replace('\u066C', '')
+                self.price = int(num)
+            elif "متراژ" in section.get_text():
+                num= num.group().replace('\u066C', '')
+                self.area = int(num)
+
+    def get_rentPrice(self):
+        mortgage, rent = None, None
+        style = self.soup1.find_all('input' , class_= "kt-range-slider__input")
+
+        #get_mortgage, rent, area, yeare
+        if style:
+            unit_converter = 0
+            prices = self.soup1.find_all('td' , class_= 'kt-group-row-item kt-group-row-item__value kt-group-row-item--info-row')
+            for x in [3,4]:
+                
+                if 'میلیارد' in prices[x].get_text():
+                    unit_converter = 1000000000
+                elif 'میلیون' in prices[x].get_text():
+                    unit_converter = 1000000
+                elif 'هزار' in prices[x].get_text():
+                    unit_converter = 1
+                
+                p = re.search(r'(\d+\.*\d*)', prices[x].get_text())
+
+                if p and re.match(r'۱{1,3}(٬۱{3})+$', p.group()):
+                    m = self.rent = self.mortgage = None
+                elif p:
+                    m = float(p.group().split(' ')[0])*unit_converter
+                else:
+                    m = 0.0
+
+                if x == 3:
+                    self.mortgage=m
+                elif x == 4:
+                    self.rent=m
+
+        elif not style:
+            prices = self.soup1.find_all('div', class_ = "kt-base-row kt-base-row--large kt-unexpandable-row")
+            for a in prices: 
+                p = re.search(r'\d[\d\u066C]*',a.get_text())
+                if p and re.match(r'۱{1,3}(٬۱{3})+$', p.group()):
+                    self.rent = self.mortgage = None
+                elif p and "ودیعه" in a.get_text():  
+                    p = p.group().replace('\u066C', '')
+                    self.mortgage = int(p)
+                elif p and "اجاره" in a.get_text():
+                    p = p.group().replace('\u066C', '')
+                    self.rent = int(p)
+                elif not p and "ودیعه" in a.get_text() and "اجاره" not in a.get_text():
+                        self.mortgage = 0
+                elif not p and "اجاره" in a.get_text() and "ودیعه" not in a.get_text():
+                        self.rent = 0
+            if mortgage == 0 and rent == 0:
+                self.rent = self.mortgage = None
+          
+    def get_district(self):
+        mahale_text = self.soup1.find_all('div', class_ = "kt-page-title__subtitle kt-page-title__subtitle--responsive-sized")[0]
+        _mahale = mahale_text.get_text().split("\u060C")[1]
+        self.mahale = _mahale
+
+    def get_exp(self):
+        explink = self.soup1.find_all('h1', class_ = "kt-page-title__title kt-page-title__title--responsive-sized")[0].get_text()
+        explink = explink
+        self.exp = explink
+
+    def get_PropertyCases(self, url, retry=RETRY):
+        _Pcases = None
+        while retry > 0:
+            divar = requests.get(url)
+            if divar.status_code == 200:
+                soup = BeautifulSoup(divar.text, 'html.parser')
+                _Pcases = soup.find_all('a', class_="kt-post-card__action")
+                if _Pcases:
+                    self.Pcases = _Pcases
+                    break
+                else:
+                    log('_Pcases not found. status code: %i.' %(divar.status_code))    
+            else:
+                log('_Pcases not found. status code: %i.' %(divar.status_code))
+                time.sleep(2)
+                retry -= 1
+        if not _Pcases:
+            log("Pcases not founded after retries.")
+            raise Exception("Pcases not founded after retries.")
+
+    def get_Pcases(self):
+        global RETRY_SLEEP_TIME
+        driver = start_driver()
+        driver.get(self.link)
+        time.sleep(RETRY_SLEEP_TIME)
+        self.page_source = driver.page_source
+        driver.quit()
+
+    def get_output(self):
+        output = {
+            'landuse': self.landuse, 'ptype' : self.ptype, 'price' : self.price,
+            'area': self.area,         'Cyear': self.Cyear,     'mortgage': self.mortgage,
+            'rent': self.rent,         'lat': self.lat,       'lon' : self.lon,
+            'mahale': self.mahale,       'exp': self.exp,       'link' : self.link,
+            'date_time' : self.date_time
+        }
+        return output
+
+        #INSERT_TO_DB
+    
+    def not_duplicate(self, propertyModel):
+        if propertyModel.objects.filter(**self.get_output()):
+            return False
+        else:
+            return True
+
+    def insert(self, propertyModel):
+
+        #### TODO no need to create like below add **output
+        try:
+            propertyModel.objects.create(**self.get_output())
+
+        except Exception as error:
+            log(f'[{self.landuse}- {self.ptype}] - in insert step errore: {str(error)} -- {str(self.get_output())}.')
+            raise Exception
+
+    def retry_get_data(self, function, retry=RETRY, driver=DRIVER):
+        global RETRY_SLEEP_TIME
+        ret = retry
+        if driver:
+            while retry > 0:
+                try:
+                    dr = start_driver()
+                    dr.get(self.link)
+                    time.sleep(int(RETRY_SLEEP_TIME))
+                    tmp_pgs = dr.page_source
+                    result = function(tmp_pgs)
+                    dr.quit()
+                    if result:
+                        return result
+                    else:
+                        log('in retrying %i result not founded.' %(ret - retry + 1))
+                        retry -= 1
+                except Exception as ex:
+                    log('in retry_get_data driver True: ' + str(ex) + self.link)
+                    #raise Exception
+                    continue
+        else:
+            while retry > 0:
+                try:
+                    r = requests.get(self.link)
+                    result = function(r.content)
+                    if result:
+                        return result
+                    else:
+                        log('in retrying %i result not founded.' %(ret - retry + 1))
+                        retry -= 1
+                except Exception as ex:
+                    log('in retry_get_data driver False: ' + str(ex) + self.link)
+                    #raise Exception
+                    continue
+
+
+
+    def update(self, _landuse, _ptype):
+        grdict = {}
+        insert_counter = 0
+        #### create class to loger
+
+        for grand_dict in GRAND_DICT:
+            if grand_dict["landuse"] == _landuse and grand_dict["ptype"] == _ptype:
+                self.landuse = _landuse
+                self.ptype = _ptype
+                grdict = grand_dict
+        
+        log('update(%s, %s) is run.'% (self.landuse,self.ptype))
+        self.get_PropertyCases(grdict['url'])
+        log(f'[{self.landuse}- {self.ptype}] - get {str(len(self.Pcases))} Pcasses')
+        for Pcase in self.Pcases:
+            try:
+                self.link = 'https://divar.ir'+ Pcase.get('href')
+                self.get_Pcases()
+                self.set_soup1()
+
+                if not self.page_source:
+                    self.retry_get_data(self.get_Pcases, driver=False)
+                if not self.page_source:
+                    log(f'[{self.landuse}- {self.ptype}] - PcaseRespons is not availabe.')
+                    continue
+                
+                if not self.has_map():
+                    log(f'[{self.landuse}- {self.ptype}] - {self.link} - has map is false.')
+                    continue
+
+                xy = self.get_loc(self)
+                
+                #retry
+                if not xy:
+                    xy = self.retry_get_data(self.get_loc)
+                if not xy:
+                    log(f'[{self.landuse}- {self.ptype}] - {self.link} - have no loc')
+                    continue
+
+
+                self.mortgage = self.rent = data = 0
+                if 'buy_price' in grdict['find_key']:
+                    if grdict['find_key']['buy_price'] == 'price':
+                        d1 = d2 = ""
+                        self.get_buyPrice()
+                        opt = grdict['find_key']['findall']
+
+                        d1 = (self.soup1.find_all(opt[0],class_ = opt[1]))
+                        d2 = d1[opt[2]]
+                        data = d2.get_text('thead').split('thead')
+
+                        self.area = int(data[3])
+                        self.Cyear = data[4]
+
+                    elif grdict['find_key']['buy_price'] == 'price_area':
+                        self.get_buyPrice()
+                        self.Cyear = 0
+
+                elif 'rent_price' in grdict['find_key']:
+                    self.get_rentPrice()
+                    opt = grdict['find_key']
+                    
+                    if 'اجارهٔ دفاتر صنعتی، کشاورزی و تجاری' in self.soup1.find_all('span', class_= "kt-breadcrumbs__action-text")[2]:
+                        log(f'[{self.landuse}- {self.ptype}] - {self.link} - indasterial Case')
+                        continue
+
+                    style = self.soup1.find_all(opt['style_findall'][0] , class_= opt['style_findall'][1])
+                    if style:
+                        prices = self.soup1.find_all(opt['styled_findall'][0] , class_= opt['styled_findall'][1])
+                        self.area = int(prices[0].get_text())
+                        self.Cyear = prices[1].get_text()
+
+                    elif not style:
+                        FArea = self.soup1.find_all(opt['notstyled_findall'][0], class_= opt['notstyled_findall'][1])[opt['notstyled_findall'][2]]
+                        F = FArea.get_text('p').split('p')
+
+                        for i in range(len(F)):
+                            if 'متراژ' in F[i]:
+                                self.area = int(F[int(i+ (len(F)/2))])
+                            elif 'ساخت' in F[i]:
+                                self.Cyear = F[int(i+ (len(F)/2))]
+                    
+                    if self.mortgage is None and self.rent is None:
+                        log(f'[{self.landuse}- {self.ptype}] - {self.link} - have no price')
+                        continue
+                    
+                    self.price = int((self.mortgage + (self.rent*30.0)) / int(self.area))
+                
+                if not self.price:
+                    log(f'[{self.landuse}- {self.ptype}] - {self.link} - have no price')
+                    continue
+                self.lat = repr(xy[0])
+                self.lon = repr(xy[1])
+                self.get_district()
+                self.get_exp()
+                self.date_time = timezone.now()
+
+                if self.not_duplicate(propertyModel):
+                    self.insert(propertyModel)
+                    insert_counter = insert_counter + 1
+                    log(f"[{self.landuse}- {self.ptype}] Case {str(self.Pcases.index(Pcase)+1)}/{str(len(self.Pcases))} & {str(insert_counter)} Case inserted")
+                else: 
+                    log(self.link + ' is duplicate')
+                    
+            except Exception as ex:
+                log(str(ex)+self.link)
+                raise Exception
+            
+
+        log(self.landuse+', '+self.ptype+' UPDATED!')
+
+
 
 
 
 #LOG
 logging.basicConfig(filename='log.log', level=logging.INFO, format='%(asctime)s: %(message)s')
+
 def log(message):
     logging.info(message)
 
@@ -73,263 +375,48 @@ def logreader():
             logtxt = ['']
         return logtxt[-1] + str(land_typ_stat)
 
-def status_reader():
-    PCStatus = []
-    for case in GRAND_DICT:
-        PCStatus.append(case['landuse'] + '_' + case['ptype'] + ': ' + case['update_status'])
-    return PCStatus
 
 #SELENIUM_DRIVER
-def start_driver(browser=DRIVER_BROWSER,driver_timeout=DRIVER_TIMEOUT):
+def start_driver(browser=DRIVER_BROWSER, driver_timeout=DRIVER_TIMEOUT):
     if browser == 'chrome':
-
-        from selenium.webdriver.chrome.service import Service as ch_Service
-        from selenium.webdriver.chrome.options import Options as ch_Options
-        from webdriver_manager.chrome import ChromeDriverManager
-
-        if os.path.isfile(r"chromedriver.txt"):
-            with open(r"chromedriver.txt", 'r') as file:
-                PathChromeDriverManager = file.read().strip()
-        else:
-            with open(r"chromedriver.txt", 'w') as file:
-                PathChromeDriverManager = ChromeDriverManager().install() 
-                file.write(PathChromeDriverManager)
-
-        chrome_options = ch_Options() 
-        chrome_options.page_load_strategy = 'eager'
-        chrome_options.add_argument("--headless=new")
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--window-size=1920x1080")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-        
-        
-        service = ch_Service(PathChromeDriverManager)
-        driver = webdriver.Chrome(options= chrome_options,service=service)
+        from selenium.webdriver import Chrome as browserwebdriver
+        from selenium.webdriver.chrome.service import Service
+        from selenium.webdriver.chrome.options import Options
+        from webdriver_manager.chrome import ChromeDriverManager as drivermanager
+        _url = None
+        _latest_release_url = None
 
     elif browser == 'edge':
-
-        from selenium.webdriver.edge.options import Options as edg_Options
-        from selenium.webdriver.edge.service import Service as edg_Service
-        from webdriver_manager.microsoft import EdgeChromiumDriverManager
-        
-        if os.path.isfile(r"msedgedriver.txt"):
-            with open(r"msedgedriver.txt", 'r') as file:
-                PathECDM = file.read().strip()
-        else:
-            PathECDM = EdgeChromiumDriverManager(url='https://msedgedriver.microsoft.com', latest_release_url='https://msedgedriver.microsoft.com/LATEST_RELEASE').install()
-            with open(r"msedgedriver.txt", 'w') as file:
-                file.write(PathECDM)
-
-        edge_options = edg_Options()
-        edge_options.page_load_strategy = 'eager'
-        edge_options.add_argument("--headless=new")
-        edge_options.add_argument("--disable-gpu")
-        edge_options.add_argument("--window-size=1920x1080")
-        edge_options.add_argument("--no-sandbox")
-        edge_options.add_argument("--disable-dev-shm-usage")
+        from selenium.webdriver import Edge as browserwebdriver
+        from selenium.webdriver.edge.service import Service 
+        from selenium.webdriver.edge.options import Options 
+        from webdriver_manager.microsoft import EdgeChromiumDriverManager as drivermanager
+        _url="https://msedgedriver.microsoft.com"
+        _latest_release_url="https://msedgedriver.microsoft.com/LATEST_RELEASE"
+ 
+    else:
+        raise Exception("browser is not valid.")
 
 
+    if os.path.isfile(f"{browser}_driver.txt"):
+        with open(f"{browser}_driver.txt", 'r') as file:
+            PathDriverManager = file.read().strip()
+    else:
+        with open(f"{browser}_driver.txt", 'w') as file:
+            PathDriverManager = drivermanager(url=_url, latest_release_url=_latest_release_url).install() 
+            file.write(PathDriverManager)
 
-        service = edg_Service(PathECDM)
-        driver = webdriver.Edge(options=edge_options, service=service)
-    
+    options = Options() 
+    options.page_load_strategy = 'eager'
+    options.add_argument("--headless=new")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920x1080")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    service = Service(PathDriverManager)
+    driver = browserwebdriver(options=options, service=service) # type: ignore
     driver.set_page_load_timeout(driver_timeout)
     return driver
-
-
-#GET_ADV_DATA
-def get_loc(page_source):
-    pr_data = str(page_source)
-    lat_ = re.search(r'"latitude"\s*:\s*"?(?P<lat>\d+\.?\d*)"?', pr_data)
-    long_ = re.search(r'"longitude"\s*:\s*"?(?P<long>\d+\.?\d*)"?', pr_data)
-    x_y = None
-    if lat_ and long_:
-        (lat,) = lat_.groups()
-        (long,) = long_.groups()
-        x_y =[float(lat),float(long)]
-    return x_y
-
-def has_map(page_source):
-    #response = requests.get(link)
-    #page_source = response.text
-    soup = BeautifulSoup(page_source, 'html.parser')
-    img = soup.find_all('img', alt='موقعیت مکانی')
-    if img:
-        return True
-    else:
-        return False
-
-def get_buyPrice(page_source):
-    soup1 = BeautifulSoup(page_source, 'html.parser')
-    prices = soup1.find_all('div', class_ = "kt-base-row kt-base-row--large kt-unexpandable-row")
-    price = None
-    Area = None
-    for a in prices:
-        p = re.search(r'\d[\d\u066C]*',a.get_text())
-        if not p:
-            pass
-        elif re.match(r'۱{1,3}(٬۱{3})+$', p.group().replace('\u066C', '')):
-            return [None, None]
-        elif "قیمت هر متر" in a.get_text():
-            p = p.group().replace('\u066C', '')
-            price = int(p)
-        elif "متراژ" in a.get_text():
-            p = p.group().replace('\u066C', '')
-            Area = int(p)
-    return [price, Area]
-
-def get_rentPrice(page_source):
-    soup1 = BeautifulSoup(page_source, 'html.parser')
-    prices = soup1.find_all('div', class_ = "kt-base-row kt-base-row--large kt-unexpandable-row")
-    mortgage = None
-    rent = None
-    style = soup1.find_all('input' , class_= "kt-range-slider__input")
-    #get_mortgage, rent, area, yeare
-    if style:
-        unit = 0
-        prices = soup1.find_all('td' , class_= 'kt-group-row-item kt-group-row-item__value kt-group-row-item--info-row')
-        for x in [3,4]:
-            if 'میلیون' in prices[x].get_text():
-                unit = 1000000
-            elif 'میلیارد' in prices[x].get_text():
-                unit = 1000000000
-            elif 'هزار' in prices[x].get_text():
-                unit = 1
-
-            p = re.search(r'(\d+\.*\d*)', prices[x].get_text())
-            if p and re.match(r'۱{1,3}(٬۱{3})+$', p.group()):
-                return [None, None]
-            elif p:
-                m = float(p.group().split(' ')[0])*unit
-            else:
-                m = 0
-        
-            if x == 3:
-                mortgage=m
-            elif x == 4:
-                rent=m
-        return [mortgage,rent]
-    elif not style:
-        for a in prices: 
-            p = re.search(r'\d[\d\u066C]*',a.get_text())
-            if p and re.match(r'۱{1,3}(٬۱{3})+$', p.group()):
-                return [None, None]
-            elif p and "ودیعه" in a.get_text():  
-                p = p.group().replace('\u066C', '')
-                mortgage = int(p)
-            elif p and "اجاره" in a.get_text():
-                p = p.group().replace('\u066C', '')
-                rent = int(p)
-            elif not p and "ودیعه" in a.get_text() and "اجاره" not in a.get_text():
-                    mortgage = 0
-            elif not p and "اجاره" in a.get_text() and "ودیعه" not in a.get_text():
-                    rent = 0
-        if mortgage == 0 and rent == 0:
-            return [None, None]
-    
-        return [mortgage,rent]
-    
-def get_district(page_source):
-    soup1 = BeautifulSoup(page_source, 'html.parser')
-    mahale_text = soup1.find_all('div', class_ = "kt-page-title__subtitle kt-page-title__subtitle--responsive-sized")[0]
-    mahale = mahale_text.get_text().split("\u060C")[1]
-    return mahale
-
-def get_exp(page_source):
-    soup1 = BeautifulSoup(page_source, 'html.parser')
-    explink = soup1.find_all('h1', class_ = "kt-page-title__title kt-page-title__title--responsive-sized")[0].get_text()
-    explink = explink
-    return explink
-
-def get_PropertyCases(url, retry=RETRY):
-    while retry > 0:
-        divar = requests.get(url)
-        if divar.status_code == 200:
-            soup = BeautifulSoup(divar.text, 'html.parser')
-            Pcases = soup.find_all('a', class_="kt-post-card__action")
-            if Pcases:
-                return Pcases
-            else:
-                log('Pcases not found. status code: %i.' %(divar.status_code))
-                retry -= 1
-
-def get_Pcases(Plink):
-    global RETRY_SLEEP_TIME
-    driver = start_driver()
-    driver.get(Plink)
-    time.sleep(RETRY_SLEEP_TIME)
-    source = driver.page_source
-    driver.quit()
-    return source
-
-def retry_get_data(function, Plink, retry=RETRY, driver=DRIVER):
-    global STOPSIGN, RETRY_SLEEP_TIME, RETRY, DRIVER
-    result = None
-
-    if driver:
-        while retry > 0 and not result and not STOPSIGN:
-            log('in retrying %i result not founded.' %(RETRY-retry))
-            retry -= 1
-            dr = start_driver()
-            #log("retry driver started ...")
-            try:
-                dr.get(Plink)
-                time.sleep(int(RETRY_SLEEP_TIME))
-                tmp_pgs = dr.page_source
-                result = function(tmp_pgs)
-                dr.quit()
-            except Exception as ex:
-                log('in retry_get_data driver True: ' + str(ex) + Plink)
-                #raise Exception
-                continue
-    else:
-        while retry > 0 and not result and not STOPSIGN:
-            log('in retrying %i result not founded.' %(RETRY-retry))
-            retry -= 1
-            try:
-                r = requests.get(Plink)
-                result = function(r.content)
-                #log(result)
-            except Exception as ex:
-                log('in retry_get_data driver False: ' + str(ex) + Plink)
-                #raise Exception
-                continue
-
-    return result
-
-
-#INSERT_TO_DB
-def not_duplicate(propertyModel,output):
-    if propertyModel.objects.filter(
-        landuse=output['landuse'], 
-        ptype=output['ptype'], 
-        price=output['price'], 
-        area=output['area'], 
-        Cyear=output['Cyear'], 
-        mortgage=output['mortgage'], 
-        rent=output['rent'], 
-        lat=(output['lat']), 
-        lon=(output['lon']), 
-        mahale=output['mahale'], 
-        exp=output['exp'], 
-        link=output['link'], 
-        date_time=output['date_time']
-    ):
-        return False
-    else:
-        return True
-
-def insert(propertyModel,output):
-
-    #### TODO no need to create like below add **output
-    try:
-        propertyModel.objects.create(**output)
-
-    except Exception as error:
-        log(f'[{output['landuse']}- {output['ptype']}] - in insert step errore: {str(error)} -- {str(output)}.')
-        raise Exception
-
 
 
 #GET_DATA_UPDATE
@@ -343,136 +430,17 @@ def update_status(landuse, ptype, activat):
             elif activat == True:
                 grdict['update_status'] = 'deactive'
 
-def update(landuse, ptype):
-    global STOPSIGN 
-    grdict = {}
-    insert_counter = 0
+def status_reader():
+    PCStatus = []
+    for case in GRAND_DICT:
+        PCStatus.append(case['landuse'] + '_' + case['ptype'] + ': ' + case['update_status'])
+    return PCStatus
 
-    log('update(%s, %s) is run.'% (landuse,ptype))
-    for grand_dict in GRAND_DICT:
-        if grand_dict["landuse"] == landuse and grand_dict["ptype"] == ptype:
-            grdict = grand_dict
-    
-    Pcases = get_PropertyCases(grdict['url'])
-
-    if not Pcases:
-        log("Pcases not founded after retrys.")
-        return None
-    
-    log(f'[{landuse}- {ptype}] - get {str(len(Pcases))} Pcasses')
-    for Pcase in Pcases:
-        output = {
-            'landuse': landuse, 'ptype' : ptype, 'price' : None,
-            'area': None,         'Cyear': None,     'mortgage': None,
-            'rent': None,         'lat': None,       'lon' : None,
-            'mahale': None,       'exp': None,       'link' : None,
-            'date_time' : None
-        }
-        
-        
-        try:
-            Plink = 'https://divar.ir'+ Pcase.get('href')
-            page_source = get_Pcases(Plink)
-
-            if not page_source:
-                page_source = retry_get_data(get_Pcases, Plink, driver=False)
-            if not page_source:
-                log(f'[{landuse}- {ptype}] - PcaseRespons is not availabe.')
-                continue
-            
-            
-
-            if not has_map(page_source):
-                log(f'[{landuse}- {ptype}] - {Plink} - has map is false.')
-                continue
-
-            xy = get_loc(page_source)
-            
-            #retry
-            if not xy:
-                xy = retry_get_data(get_loc,Plink=Plink)
-            if not xy:
-                log(f'[{landuse}- {ptype}] - {Plink} - have no loc')
-                continue
-
-
-            if 'buy_price' in grdict['find_key']:
-                output['mortgage'] = output['rent'] = data = 0
-                if grdict['find_key']['buy_price'] == 'price':
-                    d1 = d2 = ""
-                    output['price'] = get_buyPrice(page_source)[0]
-                    opt = grdict['find_key']['findall']
-                    soup1 = BeautifulSoup(page_source, 'html.parser')
-                    d1 = (soup1.find_all(opt[0],class_ = opt[1]))
-                    d2 = d1[opt[2]]
-                    data = d2.get_text('thead').split('thead')
-                    output['area'] = int(data[3])
-                    output['Cyear'] = data[4]
-
-                elif grdict['find_key']['buy_price'] == 'price_area':
-                    output['price'], output['area'] = get_buyPrice(page_source)
-                    output['area'] = int(output['area'])
-                    output['Cyear'] = 0
-
-            elif 'rent_price' in grdict['find_key']:
-                output['mortgage'], output['rent'] = get_rentPrice(page_source)
-                soup1 = BeautifulSoup(page_source, 'html.parser')
-                opt = grdict['find_key']
-                
-                if 'اجارهٔ دفاتر صنعتی، کشاورزی و تجاری' in soup1.find_all('span', class_= "kt-breadcrumbs__action-text")[2]:
-                    log(f'[{landuse}- {ptype}] - {Plink} - indasterial Case')
-                    continue
-
-                style = soup1.find_all(opt['style_findall'][0] , class_= opt['style_findall'][1])
-                if style:
-                    prices = soup1.find_all(opt['styled_findall'][0] , class_= opt['styled_findall'][1])
-                    output['area'] = int(prices[0].get_text())
-                    output['Cyear'] = prices[1].get_text()
-
-                elif not style:
-                    FArea = soup1.find_all(opt['notstyled_findall'][0], class_= opt['notstyled_findall'][1])[opt['notstyled_findall'][2]]
-                    F = FArea.get_text('p').split('p')
-
-                    for i in range(len(F)):
-                        if 'متراژ' in F[i]:
-                            output['area'] = int(F[int(i+ (len(F)/2))])
-                        elif 'ساخت' in F[i]:
-                            output['Cyear'] = F[int(i+ (len(F)/2))]
-                
-                if output['mortgage'] is None and output['rent'] is None:
-                    log(f'[{landuse}- {ptype}] - {Plink} - have no price')
-                    continue
-                
-                output['price'] = int((output['mortgage'] + (output['rent']*30))/int(output['area']))
-            
-            if not output['price']:
-                log(f'[{landuse}- {ptype}] - {Plink} - have no price')
-                continue
-            output['lat'] = repr(xy[0])
-            output['lon'] = repr(xy[1])
-            output['mahale'] = get_district(page_source)
-            output['exp'] = get_exp(page_source)
-            output['link'] = Plink
-            output['date_time'] = timezone.now()
-
-            if not_duplicate(propertyModel,output):
-                insert(propertyModel,output)
-                insert_counter = insert_counter + 1
-                log(f"[{landuse}- {ptype}] Case {str(Pcases.index(Pcase)+1)}/{str(len(Pcases))} & {str(insert_counter)} Case inserted")
-            else: 
-                log(Plink + ' is duplicate')
-                
-        except Exception as ex:
-            log(str(ex)+Plink)
-            raise Exception
-        
-
-    log(landuse+', '+ptype+' UPDATED!')
 
 def cdt(lu: str, typ:str) -> list:
     if propertyModel.objects.filter(landuse=lu,ptype= typ):
         count = propertyModel.objects.filter(landuse=lu, ptype=typ).count()
-        lastupdate = propertyModel.objects.filter(landuse=lu ,ptype=typ).last().date_time
+        lastupdate = propertyModel.objects.filter(landuse=lu ,ptype=typ).last().date_time  # type: ignore
     else:
         count = 0
         lastupdate = "بروز رسانی نشده"
@@ -593,8 +561,3 @@ def makeshape(modeladmin, request, queryset):
     Insert()
 
 
-#STOP UPDATE
-def stop_update():
-    global STOPSIGN
-    STOPSIGN = True
-    log("stop func is calling...")

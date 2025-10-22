@@ -1,0 +1,1 @@
+/home/mohammad/.wdm/drivers/edgedriver/linux64/138.0.3351.121/msedgedriver

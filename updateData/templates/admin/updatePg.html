@@ -44,7 +44,6 @@
 
         <div class="buttons">
             <button type="submit" class="btn btn-primary">به‌روزرسانی داده‌ها</button>
-            <button type="button" onclick="stopTask()" class="btn btn-danger">توقف به‌روزرسانی داده‌ها</button>
         </div>
         <div id="spinner" class="spinner" style="display: none;"></div>
     </form>
@@ -66,7 +65,6 @@
 <script>
     window.csrfToken = "{{ csrf_token }}";
     window.statusURL = "{% url 'update' %}";
-    window.stopURL = "{% url 'update' %}";
 </script>
 <script src="{% static 'updateData/js/main.js' %}"></script>
 
