@@ -1,20 +1,18 @@
 from celery import shared_task
 from .celery import app
-from updateData.services import Property
+from updateData.services import cards
 
 
 @shared_task
 def periodic_updatedata():
-    prop = Property()
-    prop.update('res', 'buy')
-    prop.update('res', 'rent')
-    prop.update('resland', 'buy')
-    prop.update('com', 'buy')
-    prop.update('com', 'rent')
+    for landuse in ['res', 'com', 'resland']:
+        for ptype in ['buy','rent']:
+            card = cards(landuse=landuse, ptype=ptype)
+            card.update()
 
 @app.task
 def updatedata(land_typs):
     for land_typ in land_typs:
-        prop = Property()
         (land, typ) = land_typ.split('-')
-        prop.update(land, typ)
+        card = cards(landuse=land, ptype=typ)
+        card.update()
