@@ -61,12 +61,13 @@ def dublecheck(driver=False, retry=RETRY, retry_time_sleep=RETRY_SLEEP_TIME):
                         self.refresh(driver=driver)
                         time.sleep((retry_time_sleep/retry*i))
                         result = func(self,*args,**kwargs)
+                        log(('retry', result))
                     else:
                         return result
-                    log(('retry', result))
                 except Exception as ex:
                     log(f"happend excepton in retries: {ex}")
                     continue
+            return result
         return wraper
     return decorator
 
@@ -116,7 +117,6 @@ class cards:
         else:
             return None
         
-
     def update(self):
         insert_counter = 0
         log('update cards (%s, %s) is run.'% (self.landuse,self.ptype))
@@ -130,8 +130,8 @@ class cards:
             try:
                 link = 'https://divar.ir'+ Pcase.get('href')
                 property_case = Property(link, self.landuse, self.ptype)
+                
                 property_case.get_pcase_page_source()
-
                 if not property_case.pcase_page_source:
                     log(f'[{property_case.landuse}- {property_case.ptype}] - pcase_page_source is not availabe.')
                     continue
@@ -141,7 +141,6 @@ class cards:
                     continue
 
                 if not property_case.get_loc():
-
                     log(f'[{property_case.landuse}- {property_case.ptype}] - {property_case.property_link} - have no loc')
                     continue
 
@@ -208,8 +207,8 @@ class cards:
                     
             except Exception as ex:
                 log(str(ex)+property_case.property_link)
-                raise Exception(str(ex)+property_case.property_link)
-            
+                continue
+                #raise Exception(str(ex)+property_case.property_link)
 
         log(property_case.landuse+', '+property_case.ptype+' UPDATED!')
 
@@ -230,7 +229,6 @@ class Property:
         self.rent = None
         self.area = None
         self.Cyear = None
-
 
     def refresh(self,driver: bool = False) -> None:
         #breakpoint()
@@ -262,7 +260,6 @@ class Property:
         self.soup1 = BeautifulSoup(self.pcase_page_source, 'html.parser')
         return self.soup1
 
-
     @dublecheck(False)
     def has_map(self) -> bool:
         img = self.soup1.find_all('img', alt='موقعیت مکانی')
@@ -285,7 +282,6 @@ class Property:
             return [lat,long]
         return None
     
-
     def get_buyPrice(self) -> list | None:
         sections = self.soup1.find_all('div', class_ = "kt-base-row kt-base-row--large kt-unexpandable-row")
 
@@ -364,7 +360,6 @@ class Property:
         explink = explink
         self.exp = explink
 
-
     def get_output(self):
         output = {
             'landuse': self.landuse, 'ptype' : self.ptype, 'price' : self.price,
@@ -384,8 +379,6 @@ class Property:
             return True
 
     def insert(self, propertyModel):
-
-        #### TODO no need to create like below add **output
         try:
             propertyModel.objects.create(**self.get_output())
 
@@ -471,7 +464,6 @@ def status_reader():
     for case in GRAND_DICT:
         PCStatus.append(case['landuse'] + '_' + case['ptype'] + ': ' + case['update_status'])
     return PCStatus
-
 
 def cdt(lu: str, typ:str) -> list:
     if propertyModel.objects.filter(landuse=lu,ptype= typ):
