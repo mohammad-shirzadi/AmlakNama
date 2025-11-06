@@ -33,6 +33,19 @@ class updateData_API(APIView):
         return render(request,'admin/updatePg.html',context)
 
     def post(self, request):
+        context = {
+            "count_res_rent" : cdt('res','rent')[0],
+            "lastupdateRR" : cdt('res','rent')[1],
+            "count_res_buy" : cdt('res','buy')[0],
+            "lastupdateRB" : cdt('res','buy')[1],
+            "count_resland_buy" : cdt('resland','buy')[0],
+            "lastupdateRlB" : cdt('resland','buy')[1],
+            "count_com_buy" : cdt('com','buy')[0],
+            "lastupdateCB" : cdt('com','buy')[1],
+            "count_com_rent" : cdt('com','rent')[0],
+            "lastupdateCR" : cdt('com','rent')[1],
+            "inlog" : logreader()
+        }
         if request.POST.get('land_typ'):
             land_types = request.POST.getlist('land_typ')
             updatedata.delay(land_types) # type: ignore
@@ -42,7 +55,8 @@ class updateData_API(APIView):
             #   update(land, typ)
                 
                 #threading.Thread(target=ThradedUpdate, args=(land,typ)).start()
-            return render(request,'admin/updatePg.html')
+            
+            return render(request,'admin/updatePg.html', context)
         
         elif request.POST.get('LogKey'):
             return JsonResponse({'log': logreader()})   
