@@ -8,11 +8,21 @@ def periodic_updatedata():
     for landuse in ['res', 'com', 'resland']:
         for ptype in ['buy','rent']:
             card = cards(landuse=landuse, ptype=ptype)
-            card.update()
+            try:
+                card.update()
+                return ("done!")
+            except Exception as ex:
+                print(ex)
+                continue
 
 @app.task
 def updatedata(land_typs):
     for land_typ in land_typs:
         (land, typ) = land_typ.split('-')
         card = cards(landuse=land, ptype=typ)
-        card.update()
+        try:
+            card.update()
+            return ("done!")
+        except Exception as ex:
+            print(ex)
+            continue
