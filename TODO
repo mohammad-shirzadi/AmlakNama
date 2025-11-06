@@ -1,9 +1,7 @@
-# TODO [] delete the unvalidate data in prices database
-# TODO [] define coronjob in celery for update datas 
-# TODO [*] create the cancel function to stop the update
+# TODO [] validation the data in price fileds in different class
 # TODO [] define filtering on time and data to show
+# TODO [] create the cancel function to stop the update
 # TODO [] define way to use with many users
-# TODO [] automatic update the microsoft edge and webdriver
-# TODO [] add log if it not exist in log reader and log func
+# TODO [+] define coronjob in celery for update datas 
 
 
