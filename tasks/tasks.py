@@ -10,7 +10,7 @@ def periodic_updatedata():
             card = cards(landuse=landuse, ptype=ptype)
             try:
                 card.update()
-                return ("done!")
+                print("done!")
             except Exception as ex:
                 print(ex)
                 continue
@@ -22,7 +22,7 @@ def updatedata(land_typs):
         card = cards(landuse=land, ptype=typ)
         try:
             card.update()
-            return ("done!")
+            print("done!")
         except Exception as ex:
             print(ex)
             continue

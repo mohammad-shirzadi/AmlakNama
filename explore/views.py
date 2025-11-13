@@ -13,10 +13,10 @@ from rest_framework import serializers
 class homeAPI(APIView):
         
     class paramSerializer(serializers.Serializer):
-        land = serializers.CharField(required= False, max_length = 8,default='res')
-        typ = serializers.CharField(required= False,max_length = 4, default='buy')
-        reg = serializers.IntegerField(required= False, default=0)
-        bgmp = serializers.CharField(required= False, default='CartoDB positron')
+        land = serializers.CharField(required= False, max_length = 8,default=None)
+        typ = serializers.CharField(required= False,max_length = 4, default=None)
+        reg = serializers.IntegerField(required= False, default=None)
+        bgmp = serializers.CharField(required= False, default=None)
 
 
     def get(self, request):

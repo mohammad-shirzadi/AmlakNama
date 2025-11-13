@@ -5,9 +5,27 @@ from  explore.models import masages
 from explore.models import MTPPolygon, MahalatTehran
 
 
+LANDUSE = "res"
+PTYPE = "buy"
+REG_NO = 0
+TILEMAP = "CartoDB positron"
 
 
-def createmap(lu='res',typ='buy',reg=0,tile="CartoDB positron"):
+
+def createmap(lu,typ,reg,tile):    
+    global LANDUSE, PTYPE, REG_NO, TILEMAP   
+    if lu:
+        LANDUSE = lu        
+    if typ:
+        PTYPE = typ    
+    if reg:
+        REG_NO = reg
+    if tile:
+        TILEMAP = tile
+    
+    if LANDUSE == 'resland' and PTYPE == "rent":
+        PTYPE = 'buy'
+
     pqs = MTPPolygon.objects.all()
     data = []
     for r in pqs:
@@ -40,23 +58,25 @@ def createmap(lu='res',typ='buy',reg=0,tile="CartoDB positron"):
     fieldR = ['NAME_MAHAL','price', 'mortgage', 'rent']
     fieldB = ['NAME_MAHAL','price']
 
-    if reg == 0:
+
+    if REG_NO == 0:
         txt = ''
-    elif reg in range(1,23):
-        txt = f'and reg_no == {reg}'
-    if typ == 'buy':
+    elif REG_NO in range(1,23):
+        txt = f'and reg_no == {REG_NO}'
+
+    if PTYPE == 'buy':
         popupf = fieldB
-    elif typ == 'rent':
+    elif PTYPE == 'rent':
         popupf = fieldR
 
-    mp = Pgdf.query(f'landuse == "{lu}" and ptype == "{typ}"'+ txt)
-    fmp = Pgdf.query(f'landuse == "{lu}" and ptype == "{typ}"')
+    mp = Pgdf.query(f'landuse == "{LANDUSE}" and ptype == "{PTYPE}"'+ txt)
+    fmp = Pgdf.query(f'landuse == "{LANDUSE}" and ptype == "{PTYPE}"')
 
     m = mp.explore(
         column="price",  scheme='naturalbreaks',  legend=False,
         k=50,            tooltip=False,           popup=popupf,
         legend_kwds=dict(colorebar=False),        #name= l + '-' + t,
-        tiles=tile,      zoom_control=False,      zoom=11
+        tiles=TILEMAP,      zoom_control=False,      zoom=11
     )
     Tgdf.explore(
     m=m, color='None', tooltip=False, popup=['NAME_MAHAL'],
@@ -92,11 +112,11 @@ def createmap(lu='res',typ='buy',reg=0,tile="CartoDB positron"):
         'MeanPrice' : "{:,}".format(int(meanp)),
         'MinPrice' : "{:,}".format(int(minp)),
         'NameMinPrice' : ln[lp.index(minp)],
-        'lu' : lu,
-        'typ' : typ,
-        'reg' : reg,
+        'lu' : LANDUSE,
+        'typ' : PTYPE,
+        'reg' : REG_NO,
         'Tiles' : ["OpenStreetMap", "CartoDB positron", "CartoDB dark_matter"],
-        'ActiveTile' : tile,
+        'ActiveTile' : TILEMAP,
     }
 
     return data
