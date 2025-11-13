@@ -14,11 +14,6 @@ from  bs4 import BeautifulSoup
 
 
 
-#DRIVER_BROWSER = 'edge'
-#DRIVER_TIMEOUT = 30
-#RETRY_SLEEP_TIME = 10
-#RETRY = 3
-#DRIVER = True
 
 DRIVER_BROWSER = os.environ.get('DRIVER_BROWSER',default='edge')
 DRIVER_TIMEOUT = int(os.environ.get('DRIVER_TIMEOUT',default=30))
@@ -61,12 +56,12 @@ def dublecheck(driver=False, retry=RETRY, retry_time_sleep=RETRY_SLEEP_TIME):
                         self.refresh(driver=driver)
                         time.sleep((retry_time_sleep/retry*i))
                         result = func(self,*args,**kwargs)
-                        log(('retry', result))
                     else:
                         return result
                 except Exception as ex:
                     log(f"happend excepton in retries: {ex}")
                     continue
+            log(f"result is: {result}")
             return result
         return wraper
     return decorator
@@ -106,6 +101,7 @@ class cards:
             if response.status_code == 200:
                 self.cards_page_source = response.text
             else:
+                log(f'[{self.landuse}- {self.ptype}] - get_cards_page_source has not 200 responde ')
                 self.cards_page_source = None
                 return None
             
@@ -113,103 +109,69 @@ class cards:
         self.cards = soup.find_all('a', class_="kt-post-card__action")
 
         if self.cards:
+            log(f'[{self.landuse}- {self.ptype}] - get {str(len(self.cards))} Pcasses')
             return self.cards
         else:
+            log(f'[{self.landuse}- {self.ptype}] - cards not fouded.')
             return None
         
+ 
+                
+    def validate(self, cls):
+        if not cls.pcase_page_source:
+            log(f'[{cls.landuse}- {cls.ptype}] - pcase_page_source is not availabe.')
+            return False
+        if not cls.soup1:
+            log(f'[{cls.landuse}- {cls.ptype}] - soup1 is not founded. {cls.property_link}')
+            return False
+        if not cls.has_map():
+            log(f'[{cls.landuse}- {cls.ptype}] - has map is false. {cls.property_link}')
+            return False
+        if not (cls.lat or cls.long):
+            log(f'[{cls.landuse}- {cls.ptype}] - have no lat, long. {cls.property_link}')
+            return False
+        if not cls.price:
+            log(f'[{cls.landuse}- {cls.ptype}] - have no price. {cls.property_link}')
+            return False
+        return True
+
     def update(self):
         insert_counter = 0
+        self.grdict['update_status'] = 'activated'
         log('update cards (%s, %s) is run.'% (self.landuse,self.ptype))
 
         if not self.get_cards_page_source():
             raise Exception("get_cards not found.")
 
-        log(f'[{self.landuse}- {self.ptype}] - get {str(len(self.cards))} Pcasses')
-
         for Pcase in self.cards:
             try:
                 link = 'https://divar.ir'+ Pcase.get('href')
+
                 property_case = Property(link, self.landuse, self.ptype)
-                
+                if property_case.not_duplicate(propertyModel):
+                    log(f"[{self.landuse}- {self.ptype}] - is duplicate. {property_case.property_link}")
+                    continue
+
                 property_case.get_pcase_page_source()
-                if not property_case.pcase_page_source:
-                    log(f'[{property_case.landuse}- {property_case.ptype}] - pcase_page_source is not availabe.')
-                    continue
-                
-                if not property_case.has_map():
-                    log(f'[{property_case.landuse}- {property_case.ptype}] - {property_case.property_link} - has map is false.')
-                    continue
-
-                if not property_case.get_loc():
-                    log(f'[{property_case.landuse}- {property_case.ptype}] - {property_case.property_link} - have no loc')
-                    continue
-
-                property_case.mortgage = property_case.rent = data = 0
-
-                if 'buy_price' in self.grdict['find_key']:
-                    if self.grdict['find_key']['buy_price'] == 'price':
-                        property_case.get_buyPrice()
-                        opt = self.grdict['find_key']['findall']
-                        d1 = (property_case.soup1.find_all(opt[0],class_ = opt[1]))
-                        d2 = d1[opt[2]]
-                        data = d2.get_text('thead').split('thead')
-                        property_case.area = int(data[3])
-                        property_case.Cyear = data[4]
-
-                    elif self.grdict['find_key']['buy_price'] == 'price_area':
-                        property_case.get_buyPrice()
-                        property_case.Cyear = 0
-
-                elif 'rent_price' in self.grdict['find_key']:
-                    property_case.get_rentPrice()
-                    opt = self.grdict['find_key']
-                    
-                    if 'اجارهٔ دفاتر صنعتی، کشاورزی و تجاری' in property_case.soup1.find_all('span', class_= "kt-breadcrumbs__action-text")[2]:
-                        log(f'[{property_case.landuse}- {property_case.ptype}] - {property_case.property_link} - indasterial Case')
-                        continue
-
-                    style = property_case.soup1.find_all(opt['style_findall'][0] , class_= opt['style_findall'][1])
-                    if style:
-                        prices = property_case.soup1.find_all(opt['styled_findall'][0] , class_= opt['styled_findall'][1])
-                        property_case.area = int(prices[0].get_text())
-                        property_case.Cyear = prices[1].get_text()
-
-                    elif not style:
-                        FArea = property_case.soup1.find_all(opt['notstyled_findall'][0], class_= opt['notstyled_findall'][1])[opt['notstyled_findall'][2]]
-                        F = FArea.get_text('p').split('p')
-
-                        for i in range(len(F)):
-                            if 'متراژ' in F[i]:
-                                property_case.area = int(F[int(i+ (len(F)/2))])
-                            elif 'ساخت' in F[i]:
-                                property_case.Cyear = F[int(i+ (len(F)/2))]
-                    
-                    if property_case.mortgage is None and property_case.rent is None:
-                        log(f'[{property_case.landuse}- {property_case.ptype}] - {property_case.property_link} - have no price')
-                        continue
-                    
-                    property_case.price = int((property_case.mortgage + (property_case.rent*30.0)) / int(property_case.area))
-                
-                if not property_case.price:
-                    log(f'[{property_case.landuse}- {property_case.ptype}] - {property_case.property_link} - have no price')
-                    continue
-
+                property_case.get_loc()
+                property_case.get_price(self)
                 property_case.get_district()
                 property_case.get_exp()
                 property_case.date_time = timezone.now()
 
-                if property_case.not_duplicate(propertyModel):
+                if self.validate(property_case):
                     property_case.insert(propertyModel)
                     insert_counter = insert_counter + 1
                     log(f"[{self.landuse}- {self.ptype}] Case {str(self.cards.index(Pcase)+1)}/{str(len(self.cards))} & {str(insert_counter)} Case inserted")
-                else: 
-                    log(property_case.property_link + ' is duplicate')
+                else:
+                    continue
                     
             except Exception as ex:
-                log(str(ex)+property_case.property_link)
+                log(str(ex)+'\n'+ property_case.property_link)
                 continue
                 #raise Exception(str(ex)+property_case.property_link)
 
+        self.grdict['update_status'] = 'deactivated'
         log(property_case.landuse+', '+property_case.ptype+' UPDATED!')
 
 
@@ -217,26 +179,26 @@ class cards:
 
 
 class Property:
-    def __init__(self, property_link, landuse, ptype) -> None:
+    def __init__(self, property_link, landuse, ptype):
         self.property_link = property_link
         self.landuse = landuse
+        self.price = None
         self.ptype = ptype
         self.pcase_page_source = None
         self.soup1 = None
         self.lat = None
         self.long = None
-        self.mortgage = None
-        self.rent = None
+        self.mortgage = 0
+        self.rent = 0
         self.area = None
         self.Cyear = None
 
+
     def refresh(self,driver: bool = False) -> None:
-        #breakpoint()
         if driver:
             dr = start_driver()
-            time.sleep(5)
             dr.get(self.property_link)
-            time.sleep(5)
+            time.sleep(10)
             tmp_pgs = dr.page_source
             dr.quit()
         else:
@@ -246,6 +208,9 @@ class Property:
             else:
                 raise Exception("status was not 200.")
         self.pcase_page_source = tmp_pgs
+        self.soup1 = BeautifulSoup(self.pcase_page_source, 'html.parser')
+
+
 
     @dublecheck(True)
     def get_pcase_page_source(self,retry_sleep_time=RETRY_SLEEP_TIME):
@@ -282,6 +247,51 @@ class Property:
             return [lat,long]
         return None
     
+    def get_price(self, cls):
+        if 'buy_price' in cls.grdict['find_key']:
+            if cls.grdict['find_key']['buy_price'] == 'price':
+                self.get_buyPrice()
+                opt = cls.grdict['find_key']['findall']
+                d1 = (self.soup1.find_all(opt[0],class_ = opt[1]))
+                d2 = d1[opt[2]]
+                data = d2.get_text('thead').split('thead')
+                self.area = int(data[3])
+                self.Cyear = data[4]
+
+            elif cls.grdict['find_key']['buy_price'] == 'price_area':
+                self.get_buyPrice()
+                self.Cyear = 0
+
+        elif 'rent_price' in cls.grdict['find_key']:
+            self.get_rentPrice()
+            opt = cls.grdict['find_key']
+            
+            if 'اجارهٔ دفاتر صنعتی، کشاورزی و تجاری' in self.soup1.find_all('span', class_= "kt-breadcrumbs__action-text")[2]:
+                log(f'[{self.landuse}- {self.ptype}] - indasterial Case - {self.property_link}')
+                return False
+
+            style = self.soup1.find_all(opt['style_findall'][0] , class_= opt['style_findall'][1])
+            if style:
+                prices = self.soup1.find_all(opt['styled_findall'][0] , class_= opt['styled_findall'][1])
+                self.area = int(prices[0].get_text())
+                self.Cyear = prices[1].get_text()
+
+            elif not style:
+                FArea = self.soup1.find_all(opt['notstyled_findall'][0], class_= opt['notstyled_findall'][1])[opt['notstyled_findall'][2]]
+                F = FArea.get_text('p').split('p')
+
+                for i in range(len(F)):
+                    if 'متراژ' in F[i]:
+                        self.area = int(F[int(i+ (len(F)/2))])
+                    elif 'ساخت' in F[i]:
+                        self.Cyear = F[int(i+ (len(F)/2))]
+            
+            if self.mortgage is None and self.rent is None:
+                log(f'[{self.landuse}- {self.ptype}] - have no price - {self.property_link}')
+                return False
+            
+            self.price = int((self.mortgage + (self.rent*30.0)) / int(self.area))
+
     def get_buyPrice(self) -> list | None:
         sections = self.soup1.find_all('div', class_ = "kt-base-row kt-base-row--large kt-unexpandable-row")
 
@@ -373,7 +383,8 @@ class Property:
         #INSERT_TO_DB
     
     def not_duplicate(self, propertyModel):
-        if propertyModel.objects.filter(**self.get_output()):
+        duplicate = propertyModel.objects.filter(link=self.property_link).exists()
+        if duplicate:
             return False
         else:
             return True
