@@ -81,8 +81,10 @@ class cards:
 
     def refresh(self,driver: bool = False) -> None:
         if driver:
+            time.sleep(5)
             dr = start_driver()
             dr.get(self.cards_link)
+            time.sleep(5)
             tmp_pgs = dr.page_source
             dr.quit()
         else:
@@ -117,23 +119,7 @@ class cards:
         
  
                 
-    def validate(self, cls):
-        if not cls.pcase_page_source:
-            log(f'[{cls.landuse}- {cls.ptype}] - pcase_page_source is not availabe.')
-            return False
-        if not cls.soup1:
-            log(f'[{cls.landuse}- {cls.ptype}] - soup1 is not founded. {cls.property_link}')
-            return False
-        if not cls.has_map():
-            log(f'[{cls.landuse}- {cls.ptype}] - has map is false. {cls.property_link}')
-            return False
-        if not (cls.lat or cls.long):
-            log(f'[{cls.landuse}- {cls.ptype}] - have no lat, long. {cls.property_link}')
-            return False
-        if not cls.price:
-            log(f'[{cls.landuse}- {cls.ptype}] - have no price. {cls.property_link}')
-            return False
-        return True
+
 
     def update(self):
         insert_counter = 0
@@ -159,7 +145,7 @@ class cards:
                 property_case.get_exp()
                 property_case.date_time = timezone.now()
 
-                if self.validate(property_case):
+                if property_case.validate():
                     property_case.insert(propertyModel)
                     insert_counter = insert_counter + 1
                     log(f"[{self.landuse}- {self.ptype}] Case {str(self.cards.index(Pcase)+1)}/{str(len(self.cards))} & {str(insert_counter)} Case inserted")
@@ -196,9 +182,11 @@ class Property:
 
     def refresh(self,driver: bool = False) -> None:
         if driver:
+            time.sleep(5)
             dr = start_driver()
+            time.sleep(5)
             dr.get(self.property_link)
-            time.sleep(10)
+            time.sleep(5)
             tmp_pgs = dr.page_source
             dr.quit()
         else:
@@ -381,7 +369,25 @@ class Property:
         return output
 
         #INSERT_TO_DB
-    
+
+    def validate(self):
+        if not self.pcase_page_source:
+            log(f'[{self.landuse}- {self.ptype}] - pcase_page_source is not availabe.')
+            return False
+        if not self.soup1:
+            log(f'[{self.landuse}- {self.ptype}] - soup1 is not founded. {self.property_link}')
+            return False
+        if not self.has_map():
+            log(f'[{self.landuse}- {self.ptype}] - has map is false. {self.property_link}')
+            return False
+        if not (self.lat or self.long):
+            log(f'[{self.landuse}- {self.ptype}] - have no lat, long. {self.property_link}')
+            return False
+        if not self.price:
+            log(f'[{self.landuse}- {self.ptype}] - have no price. {self.property_link}')
+            return False
+        return True
+
     def not_duplicate(self, propertyModel):
         duplicate = propertyModel.objects.filter(link=self.property_link).exists()
         if duplicate:
