@@ -20,8 +20,15 @@ class propertyModel(models.Model):
     date_time = models.DateTimeField(max_length=500)
     shape = models.BooleanField(default=False)
 
-    def __str__(self):
-        return str(self.area) + 'متری, ' + self.mahale + ', متری' + str(self.price) + 'میلیون'
+    def __str__(self): # type: ignore
+        output = {
+            'landuse': self.landuse, 'ptype' : self.ptype, 'price' : self.price,
+            'area': self.area,         'Cyear': self.Cyear,     'mortgage': self.mortgage,
+            'rent': self.rent,         'lat': self.lat,       'lon' : self.lon,
+            'mahale': self.mahale,       'exp': self.exp,       'link' : self.link[-8:],
+            'date_time' : self.date_time
+        }
+        return str(output)
     def location(self):
         return [str(self.lon)+', '+ str(self.lat)] 
 

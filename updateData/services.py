@@ -11,6 +11,8 @@ import re
 import requests
 import time
 from  bs4 import BeautifulSoup
+import datetime
+import urllib
 
 
 
@@ -22,22 +24,27 @@ RETRY = int(os.environ.get('RETRY',default=3))
 DRIVER = bool(os.environ.get('DRIVER', default=True))
 
 GRAND_DICT = [
-    {"landuse":"res", "ptype":"buy", "url":"https://divar.ir/s/tehran/buy-apartment",
+    {"landuse":"res", "ptype":"buy", "card_req_data": 'apartment-sell',
     'find_key':{"findall":['table',"kt-group-row",0], 'buy_price':'price'},
     "update_status":"deactive" },
-    {"landuse":"com", "ptype":"buy","url":"https://divar.ir/s/tehran/buy-commercial-property",
+
+
+    {"landuse":"com", "ptype":"buy", "card_req_data": 'commercial-sell',
     'find_key':{"findall":['table',"kt-group-row",0],'buy_price':'price'},
     "update_status":"deactive" },
-    {"landuse":"resland", "ptype":"buy","url":"https://divar.ir/s/tehran/buy-old-house",
+
+    {"landuse":"resland", "ptype":"buy", "card_req_data": 'plot-old',
     'find_key':{"findall":['table',"kt-group-row",0],'buy_price':'price_area'},
     "update_status":"deactive"},
-    {"landuse":"res", "ptype":"rent","url":"https://divar.ir/s/tehran/rent-residential",
+
+    {"landuse":"res", "ptype":"rent","card_req_data": 'apartment-rent',
     'find_key':{"style_findall":['input',"kt-range-slider__input"],
                 "styled_findall":['td','kt-group-row-item kt-group-row-item__value kt-group-row-item--info-row'],
                 "notstyled_findall":['table','kt-group-row',0],
                 'rent_price':'mortgage_rent'},
     "update_status":"deactive" },
-    {"landuse":"com", "ptype":"rent","url":"https://divar.ir/s/tehran/rent-commercial-property",
+
+    {"landuse":"com", "ptype":"rent","card_req_data": 'commercial-rent',
     'find_key':{"style_findall":['input',"kt-range-slider__input"],
                 "styled_findall":['td','kt-group-row-item kt-group-row-item__value kt-group-row-item--info-row'],
                 "notstyled_findall":['table','kt-group-row',0],
@@ -54,14 +61,14 @@ def dublecheck(driver=False, retry=RETRY, retry_time_sleep=RETRY_SLEEP_TIME):
                 try:
                     if result is None:
                         self.refresh(driver=driver)
-                        time.sleep((retry_time_sleep/retry*i))
+                        time.sleep((retry_time_sleep)*(i+1))
                         result = func(self,*args,**kwargs)
+                        log(f"result {func} is: {result}")
                     else:
                         return result
                 except Exception as ex:
                     log(f"happend excepton in retries: {ex}")
                     continue
-            log(f"result is: {result}")
             return result
         return wraper
     return decorator
@@ -74,23 +81,64 @@ class cards:
         self.landuse = landuse
         self.ptype = ptype
         self.cards_page_source = None
+        self.cards_link = 'https://api.divar.ir/v8/postlist/w/search'
         for grand_dict in GRAND_DICT:
             if grand_dict["landuse"] == self.landuse and grand_dict["ptype"] == self.ptype:
                 self.grdict = grand_dict
-                self.cards_link = self.grdict['url']
+        self.data = {
+            'city_ids': [
+                '1',
+            ],
+            'source_view': 'CATEGORY',
+            'pagination_data': {
+                '@type': 'type.googleapis.com/post_list.PaginationData',
+                'last_post_date': f'{datetime.datetime.now().isoformat()}Z',
+                'page': 1,
+                'layer_page': 1,
+            },
+            'disable_recommendation': False,
+            'map_state': {
+                'camera_info': {
+                    'bbox': {},
+                },
+            },
+            'search_data': {
+                'form_data': {
+                    'data': {
+                        'category': {
+                            'str': {
+                                'value': self.grdict['card_req_data'],
+                            },
+                        },
+                    },
+                },
+                'server_payload': {
+                    '@type': 'type.googleapis.com/widgets.SearchData.ServerPayload',
+                    'additional_form_data': {
+                        'data': {
+                            'sort': {
+                                'str': {
+                                    'value': 'sort_date',
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        }
+
 
     def refresh(self,driver: bool = False) -> None:
         if driver:
-            time.sleep(5)
             dr = start_driver()
             dr.get(self.cards_link)
             time.sleep(5)
             tmp_pgs = dr.page_source
             dr.quit()
         else:
-            r = requests.get(self.cards_link )
+            r = requests.post(self.cards_link, json=self.data)
             if r.status_code == 200:
-                tmp_pgs = r.text 
+                tmp_pgs = r.json() 
             else:
                 raise Exception("status was not 200.")
         self.cards_page_source = tmp_pgs
@@ -98,17 +146,18 @@ class cards:
     @dublecheck(False)
     def get_cards_page_source(self):
         if not self.cards_page_source:
-            url = self.grdict['url']
-            response = requests.get(url)
+            url = self.cards_link
+            response = requests.post(url, json=self.data)
             if response.status_code == 200:
-                self.cards_page_source = response.text
+                self.cards_page_source = response.json()
             else:
                 log(f'[{self.landuse}- {self.ptype}] - get_cards_page_source has not 200 responde ')
                 self.cards_page_source = None
                 return None
-            
-        soup = BeautifulSoup(self.cards_page_source, 'html.parser')
-        self.cards = soup.find_all('a', class_="kt-post-card__action")
+        json = self.cards_page_source["list_widgets"]  # type: ignore
+        self.cards = [
+            str("https://divar.ir/v/" + j["data"]["token"]) for j in json # type: ignore
+            ]
 
         if self.cards:
             log(f'[{self.landuse}- {self.ptype}] - get {str(len(self.cards))} Pcasses')
@@ -116,10 +165,6 @@ class cards:
         else:
             log(f'[{self.landuse}- {self.ptype}] - cards not fouded.')
             return None
-        
- 
-                
-
 
     def update(self):
         insert_counter = 0
@@ -129,36 +174,52 @@ class cards:
         if not self.get_cards_page_source():
             raise Exception("get_cards not found.")
 
-        for Pcase in self.cards:
+        for link in self.cards:
             try:
-                link = 'https://divar.ir'+ Pcase.get('href')
-
                 property_case = Property(link, self.landuse, self.ptype)
+
                 if property_case.not_duplicate(propertyModel):
                     log(f"[{self.landuse}- {self.ptype}] - is duplicate. {property_case.property_link}")
                     continue
 
                 property_case.get_pcase_page_source()
+                if not property_case.pcase_page_source:
+                    log(f'[{self.landuse}- {self.ptype}] - pcase_page_source is not availabe.')
+                    continue
+                
+                if not property_case.soup1:
+                    log(f'[{self.landuse}- {self.ptype}] - soup1 is not founded. ({property_case.property_link})')
+                    continue
+
+                if not property_case.has_map():
+                    log(f'[{self.landuse}- {self.ptype}] - has map is false. ({property_case.property_link})')
+                    continue
+                
                 property_case.get_loc()
+                if not (property_case.lat or property_case.long):
+                    log(f'[{self.landuse}- {self.ptype}] - have no lat, long. ({property_case.property_link})')
+                    continue
+
                 property_case.get_price(self)
+                if not property_case.price:
+                    log(f'[{self.landuse}- {self.ptype}] - have no price. ({property_case.property_link})')
+                    continue
+    
+
                 property_case.get_district()
                 property_case.get_exp()
                 property_case.date_time = timezone.now()
+                property_case.insert(propertyModel)
+                insert_counter = insert_counter + 1
+                log(f"[{self.landuse} - {self.ptype}] Case {str(self.cards.index(link)+1)}/{str(len(self.cards))} & {str(insert_counter)} Case inserted.")
 
-                if property_case.validate():
-                    property_case.insert(propertyModel)
-                    insert_counter = insert_counter + 1
-                    log(f"[{self.landuse}- {self.ptype}] Case {str(self.cards.index(Pcase)+1)}/{str(len(self.cards))} & {str(insert_counter)} Case inserted")
-                else:
-                    continue
-                    
             except Exception as ex:
-                log(str(ex)+'\n'+ property_case.property_link)
+                log(str(ex)+'\n'+ link)
                 continue
                 #raise Exception(str(ex)+property_case.property_link)
 
         self.grdict['update_status'] = 'deactivated'
-        log(property_case.landuse+', '+property_case.ptype+' UPDATED!')
+        log(self.landuse + ', ' + self.ptype + ' UPDATED!')
 
 
 
@@ -178,15 +239,16 @@ class Property:
         self.rent = 0
         self.area = None
         self.Cyear = None
+        self.date_time = None
 
 
     def refresh(self,driver: bool = False) -> None:
+        retry_sleep_time = RETRY_SLEEP_TIME
         if driver:
-            time.sleep(5)
             dr = start_driver()
-            time.sleep(5)
+            time.sleep(retry_sleep_time)
             dr.get(self.property_link)
-            time.sleep(5)
+            time.sleep(retry_sleep_time)
             tmp_pgs = dr.page_source
             dr.quit()
         else:
@@ -204,6 +266,7 @@ class Property:
     def get_pcase_page_source(self,retry_sleep_time=RETRY_SLEEP_TIME):
         if not self.pcase_page_source:
             driver = start_driver()
+            time.sleep(retry_sleep_time)
             driver.get(self.property_link)
             time.sleep(retry_sleep_time)
             self.pcase_page_source = driver.page_source
@@ -226,7 +289,6 @@ class Property:
         pr_data = str(self.pcase_page_source) if pg_source is None else pg_source
         lat_ = re.search(r'"latitude"\s*:\s*"?(?P<lat>\d+\.?\d*)"?', pr_data)
         long_ = re.search(r'"longitude"\s*:\s*"?(?P<long>\d+\.?\d*)"?', pr_data)
-        log((lat_, long_))
         if lat_ and long_:
             lat = float(lat_.groups()[0])
             long = float(long_.groups()[0])
@@ -284,18 +346,18 @@ class Property:
         sections = self.soup1.find_all('div', class_ = "kt-base-row kt-base-row--large kt-unexpandable-row")
 
         for section in sections:
-            num = re.search(r'\d[\d\u066C]*',section.get_text())
+            num = re.search(r'[\d۰-۹][\d۰-۹\u060C\u066C]*',section.get_text())
             if not num:
                 pass
 
-            elif re.match(r'۱{1,3}(٬۱{3})+$', num.group().replace('\u066C', '')):
+            elif re.match(r'۱{1,3}(٬۱{3})+$', num.group().replace('\u060C', '')):
                 return [None, None]
             #####TODO getprice validation
             elif "قیمت هر متر" in section.get_text():
-                num = num.group().replace('\u066C', '')
+                num = num.group().replace('\u060C', '')
                 self.price = int(num)
             elif "متراژ" in section.get_text():
-                num= num.group().replace('\u066C', '')
+                num= num.group().replace('\u060C', '')
                 self.area = int(num)
 
     def get_rentPrice(self):
@@ -332,14 +394,14 @@ class Property:
         elif not style:
             prices = self.soup1.find_all('div', class_ = "kt-base-row kt-base-row--large kt-unexpandable-row")
             for a in prices: 
-                p = re.search(r'\d[\d\u066C]*',a.get_text())
+                p = re.search(r'[\d۰-۹][\d۰-۹\u060C\u066C]*',a.get_text())
                 if p and re.match(r'۱{1,3}(٬۱{3})+$', p.group()):
                     self.rent = self.mortgage = None
                 elif p and "ودیعه" in a.get_text():  
-                    p = p.group().replace('\u066C', '')
+                    p = p.group().replace('\u060C', '')
                     self.mortgage = int(p)
                 elif p and "اجاره" in a.get_text():
-                    p = p.group().replace('\u066C', '')
+                    p = p.group().replace('\u060C', '')
                     self.rent = int(p)
                 elif not p and "ودیعه" in a.get_text() and "اجاره" not in a.get_text():
                         self.mortgage = 0
@@ -370,37 +432,92 @@ class Property:
 
         #INSERT_TO_DB
 
-    def validate(self):
-        if not self.pcase_page_source:
-            log(f'[{self.landuse}- {self.ptype}] - pcase_page_source is not availabe.')
-            return False
-        if not self.soup1:
-            log(f'[{self.landuse}- {self.ptype}] - soup1 is not founded. {self.property_link}')
-            return False
-        if not self.has_map():
-            log(f'[{self.landuse}- {self.ptype}] - has map is false. {self.property_link}')
-            return False
-        if not (self.lat or self.long):
-            log(f'[{self.landuse}- {self.ptype}] - have no lat, long. {self.property_link}')
-            return False
-        if not self.price:
-            log(f'[{self.landuse}- {self.ptype}] - have no price. {self.property_link}')
-            return False
-        return True
+
 
     def not_duplicate(self, propertyModel):
         duplicate = propertyModel.objects.filter(link=self.property_link).exists()
-        if duplicate:
+        if not duplicate:
             return False
         else:
             return True
 
     def insert(self, propertyModel):
+        log(self.get_output())
         try:
             propertyModel.objects.create(**self.get_output())
 
         except Exception as error:
             log(f'[{self.landuse}- {self.ptype}] - in insert step errore: {str(error)} -- {str(self.get_output())}.')
+            raise Exception
+    
+    def update(self, field:list|str='all'):
+        try:
+            propertycase = propertyModel.objects.get(link=self.property_link)
+            card = cards(self.landuse, self.ptype)
+            output = []
+            self.get_pcase_page_source()
+            self.date_time = timezone.now()
+
+            if not self.pcase_page_source:
+                log(f'[{self.landuse}- {self.ptype}] - pcase_page_source is not availabe.')
+                return None
+            if not self.soup1:
+                log(f'[{self.landuse}- {self.ptype}] - soup1 is not founded. ({self.property_link})')
+                return None
+            
+            if self.pcase_page_source.find('این صفحه حذف شده یا وجود ندارد') != -1:
+                #if input('do you want to delete this case? [y]/n ') != 'n':
+                propertycase.delete()
+                log(f'[{self.landuse}- {self.ptype}] - is not exist-deleted! ({self.property_link})')
+                return None
+            
+            if field =='all' or 'loc' in field:
+                if not self.has_map():
+                    log(f'[{self.landuse}- {self.ptype}] - has map is false. ({self.property_link})')
+                    print(f'[{self.landuse}- {self.ptype}] - has map is false. ({self.property_link})')
+                    if input('do you want to delete this case? [y]/n ') != 'n':
+                        propertycase.delete()
+                        log(f'[{self.landuse}- {self.ptype}] - deleted. ({self.property_link})')
+                    return None
+                self.get_loc()
+                if not (self.lat or self.long):
+                    log(f'[{self.landuse}- {self.ptype}] - have no lat, long. ({self.property_link})')
+                    print(f'[{self.landuse}- {self.ptype}] - have no lat, long. ({self.property_link})')
+                    if input('do you want to delete this case? [y]/n ') != 'n':
+                        propertycase.delete()
+                        log(f'[{self.landuse}- {self.ptype}] - deleted. ({self.property_link})')
+                    return None
+                output.append(('lat',self.lat))
+                output.append(('lon',self.long))
+
+            if field =='all' or 'price' in field:
+                self.get_price(card)
+                if not self.price:
+                    #if input('do you want to delete this case? [y]/n ') != 'n':
+                    propertycase.delete()
+                    log(f'[{self.landuse}- {self.ptype}] - have no price- deleted! ({self.property_link})')
+                    return None
+                output.append(('price',self.price))
+                output.append(('rent',self.rent))
+                output.append(('mortgage',self.mortgage))
+
+            if field =='all' or 'other' in field:
+                self.get_district()
+                output.append(('mahale',self.mahale))
+                self.get_exp()
+                output.append(('exp', self.exp))
+
+            
+
+            for item in output:
+                if item[0] in propertycase.__dict__.keys():
+                    propertycase.__dict__[item[0]] = item[1]
+
+            propertycase.save()
+            log(f'last_case: {propertycase}\n{22*" "}updated_case: {output}\n{30*' '}case: \'{propertycase.link[-8:]}\' is updated.')
+            return 'Updated!:)'
+        except Exception as error:
+            log(f'errore: {str(error)}.')
             raise Exception
 
 
