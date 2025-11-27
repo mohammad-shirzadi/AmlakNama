@@ -10,9 +10,7 @@ import os
 import re
 import requests
 import time
-from  bs4 import BeautifulSoup
-import datetime
-import urllib
+
 
 
 
@@ -24,197 +22,110 @@ RETRY = int(os.environ.get('RETRY',default=3))
 DRIVER = bool(os.environ.get('DRIVER', default=True))
 
 GRAND_DICT = [
-    {"landuse":"res", "ptype":"buy", "card_req_data": 'apartment-sell',
-    'find_key':{"findall":['table',"kt-group-row",0], 'buy_price':'price'},
-    "update_status":"deactive" },
-
-
-    {"landuse":"com", "ptype":"buy", "card_req_data": 'commercial-sell',
-    'find_key':{"findall":['table',"kt-group-row",0],'buy_price':'price'},
-    "update_status":"deactive" },
-
-    {"landuse":"resland", "ptype":"buy", "card_req_data": 'plot-old',
-    'find_key':{"findall":['table',"kt-group-row",0],'buy_price':'price_area'},
-    "update_status":"deactive"},
-
-    {"landuse":"res", "ptype":"rent","card_req_data": 'apartment-rent',
-    'find_key':{"style_findall":['input',"kt-range-slider__input"],
-                "styled_findall":['td','kt-group-row-item kt-group-row-item__value kt-group-row-item--info-row'],
-                "notstyled_findall":['table','kt-group-row',0],
-                'rent_price':'mortgage_rent'},
-    "update_status":"deactive" },
-
-    {"landuse":"com", "ptype":"rent","card_req_data": 'commercial-rent',
-    'find_key':{"style_findall":['input',"kt-range-slider__input"],
-                "styled_findall":['td','kt-group-row-item kt-group-row-item__value kt-group-row-item--info-row'],
-                "notstyled_findall":['table','kt-group-row',0],
-                'rent_price':'mortgage_rent'},
-    "update_status":"deactive" },
+    {"landuse": "res",     "ptype": "buy",  "card_req_data": 'apartment-sell',  "update_status": "deactive"},
+    {"landuse": "res",     "ptype": "rent", "card_req_data": 'apartment-rent',  "update_status": "deactive"},
+    {"landuse": "resland", "ptype": "buy",  "card_req_data": 'plot-old',        "update_status": "deactive"},
+    {"landuse": "com",     "ptype": "buy",  "card_req_data": 'commercial-sell', "update_status": "deactive"},
+    {"landuse": "com",     "ptype": "rent", "card_req_data": 'commercial-rent', "update_status": "deactive"},
 ]
 
 
-def dublecheck(driver=False, retry=RETRY, retry_time_sleep=RETRY_SLEEP_TIME):
+def dublecheck(retry=RETRY, retry_time_sleep=RETRY_SLEEP_TIME):
     def decorator(func):
         def wraper(self, *args, **kwargs):
-            result = func(self,*args,**kwargs)
             for i in range(retry):
                 try:
-                    if result is None:
-                        self.refresh(driver=driver)
-                        time.sleep((retry_time_sleep)*(i+1))
-                        result = func(self,*args,**kwargs)
-                        log(f"result {func} is: {result}")
-                    else:
-                        return result
+                    time.sleep((retry_time_sleep)*(i))
+                    result = func(self,*args,**kwargs)
+                    return result
                 except Exception as ex:
-                    log(f"happend excepton in retries: {ex}")
-                    continue
-            return result
+                    log(f"land-type: [{self.landuse}-{self.ptype}], error: {ex}, token: {self.token}")
+                    if "429" not in str(ex):
+                        break
+            return False
         return wraper
     return decorator
-
-
 
 
 class cards:
     def __init__(self,landuse, ptype) -> None:
         self.landuse = landuse
         self.ptype = ptype
-        self.cards_page_source = None
+        self.tokens_list = []
         self.cards_link = 'https://api.divar.ir/v8/postlist/w/search'
         for grand_dict in GRAND_DICT:
             if grand_dict["landuse"] == self.landuse and grand_dict["ptype"] == self.ptype:
                 self.grdict = grand_dict
-        self.data = {
-            'city_ids': [
-                '1',
-            ],
-            'source_view': 'CATEGORY',
-            'pagination_data': {
-                '@type': 'type.googleapis.com/post_list.PaginationData',
-                'last_post_date': f'{datetime.datetime.now().isoformat()}Z',
-                'page': 1,
-                'layer_page': 1,
-            },
-            'disable_recommendation': False,
-            'map_state': {
-                'camera_info': {
-                    'bbox': {},
-                },
-            },
-            'search_data': {
-                'form_data': {
-                    'data': {
-                        'category': {
-                            'str': {
-                                'value': self.grdict['card_req_data'],
-                            },
-                        },
-                    },
-                },
-                'server_payload': {
-                    '@type': 'type.googleapis.com/widgets.SearchData.ServerPayload',
-                    'additional_form_data': {
-                        'data': {
-                            'sort': {
-                                'str': {
-                                    'value': 'sort_date',
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        }
+    
+    @dublecheck()
+    def get_tokens(self, token_num=24):
+        url = self.cards_link
+        loop_count = 0
 
-
-    def refresh(self,driver: bool = False) -> None:
-        if driver:
-            dr = start_driver()
-            dr.get(self.cards_link)
-            time.sleep(5)
-            tmp_pgs = dr.page_source
-            dr.quit()
-        else:
-            r = requests.post(self.cards_link, json=self.data)
-            if r.status_code == 200:
-                tmp_pgs = r.json() 
-            else:
-                raise Exception("status was not 200.")
-        self.cards_page_source = tmp_pgs
-
-    @dublecheck(False)
-    def get_cards_page_source(self):
-        if not self.cards_page_source:
-            url = self.cards_link
+        while len(self.tokens_list) <= token_num and loop_count <= 20:
+            loop_count += 1
+            self.data = {
+                "city_ids": ["1"],
+                "source_view": "CATEGORY",
+                "disable_recommendation": False,
+                "map_state": {
+                    "camera_info": {
+                    "bbox": {}
+                    }
+                },
+                "search_data": {
+                    "form_data": {"data": {"category": {"str": {"value": self.grdict['card_req_data']}}}},
+                    "server_payload": {"@type": "type.googleapis.com/widgets.SearchData.ServerPayload",
+                    "additional_form_data": {"data": {"sort": {"str": {"value": "sort_date"}}}}}
+                }
+                }
+                  
             response = requests.post(url, json=self.data)
-            if response.status_code == 200:
-                self.cards_page_source = response.json()
-            else:
-                log(f'[{self.landuse}- {self.ptype}] - get_cards_page_source has not 200 responde ')
-                self.cards_page_source = None
-                return None
-        json = self.cards_page_source["list_widgets"]  # type: ignore
-        self.cards = [
-            str("https://divar.ir/v/" + j["data"]["token"]) for j in json # type: ignore
-            ]
+            if response.status_code != 200:
+                log(f'get_tokens respondse.status_code: {response.status_code}')
+                time.sleep(5)
+                continue
 
-        if self.cards:
-            log(f'[{self.landuse}- {self.ptype}] - get {str(len(self.cards))} Pcasses')
-            return self.cards
-        else:
-            log(f'[{self.landuse}- {self.ptype}] - cards not fouded.')
-            return None
+            json_response = response.json()
+            pagination_data = json_response['pagination']['data']
+            self.data['pagination_data'] = pagination_data
+            
+            widgets = json_response["list_widgets"]
+            #breakpoint()
+            for widget in widgets:
+                if ("data" in widget.keys() and "token" in widget['data'].keys()):
+                    token = widget['data']['token']
+                    property_token = Property(token, self.landuse, self.ptype)
+                    if token not in self.tokens_list and not property_token.duplicate(propertyModel):
+                        self.tokens_list.append(token)
+                else:
+                    raise Exception(f'The api response not incloud token and data.')
+        result = len(self.tokens_list) if len(self.tokens_list) != 0 else None
+        print(result)        
+        return result
 
-    def update(self):
+    def update(self, token_num=24):
         insert_counter = 0
         self.grdict['update_status'] = 'activated'
-        log('update cards (%s, %s) is run.'% (self.landuse,self.ptype))
+        log(f'land-type: [{self.landuse}-{self.ptype}], message: update cards is run.')
 
-        if not self.get_cards_page_source():
-            raise Exception("get_cards not found.")
+        if self.get_tokens(token_num) is None:
+            raise Exception(f"land-type: [{self.landuse}-{self.ptype}], error: get_tokens not found.")
 
-        for link in self.cards:
+        for token in self.tokens_list:
             try:
-                property_case = Property(link, self.landuse, self.ptype)
+                property_case = Property(token, self.landuse, self.ptype)
 
-                if property_case.not_duplicate(propertyModel):
-                    log(f"[{self.landuse}- {self.ptype}] - is duplicate. {property_case.property_link}")
-                    continue
-
-                property_case.get_pcase_page_source()
-                if not property_case.pcase_page_source:
-                    log(f'[{self.landuse}- {self.ptype}] - pcase_page_source is not availabe.')
-                    continue
-                
-                if not property_case.soup1:
-                    log(f'[{self.landuse}- {self.ptype}] - soup1 is not founded. ({property_case.property_link})')
+                if property_case.duplicate(propertyModel):
                     continue
 
-                if not property_case.has_map():
-                    log(f'[{self.landuse}- {self.ptype}] - has map is false. ({property_case.property_link})')
-                    continue
-                
-                property_case.get_loc()
-                if not (property_case.lat or property_case.long):
-                    log(f'[{self.landuse}- {self.ptype}] - have no lat, long. ({property_case.property_link})')
-                    continue
-
-                property_case.get_price(self)
-                if not property_case.price:
-                    log(f'[{self.landuse}- {self.ptype}] - have no price. ({property_case.property_link})')
-                    continue
-    
-
-                property_case.get_district()
-                property_case.get_exp()
-                property_case.date_time = timezone.now()
+                property_case.load('all')
                 property_case.insert(propertyModel)
                 insert_counter = insert_counter + 1
-                log(f"[{self.landuse} - {self.ptype}] Case {str(self.cards.index(link)+1)}/{str(len(self.cards))} & {str(insert_counter)} Case inserted.")
+                log(f"land-type: [{self.landuse}-{self.ptype}], message: Valid inserted cases: {str(insert_counter)}, Total cases: {str(len(self.tokens_list))}.")
 
             except Exception as ex:
-                log(str(ex)+'\n'+ link)
+                log(f"land-type: [{self.landuse}-{self.ptype}], error: {str(ex)}, token: {token}")
                 continue
                 #raise Exception(str(ex)+property_case.property_link)
 
@@ -226,201 +137,172 @@ class cards:
 
 
 class Property:
-    def __init__(self, property_link, landuse, ptype):
-        self.property_link = property_link
-        self.landuse = landuse
-        self.price = None
-        self.ptype = ptype
-        self.pcase_page_source = None
-        self.soup1 = None
+    def __init__(self, token:str, landuse:str, ptype:str):
+        self.token:str = token
+        self.landuse:str = landuse
+        self.ptype:str = ptype
+        self.property_link:str = f"https://divar.ir/v/{token}"
+
+        self.map_section:dict = {}
+        self.list_data_section:dict = {}
         self.lat = None
-        self.long = None
-        self.mortgage = 0
-        self.rent = 0
-        self.area = None
-        self.Cyear = None
+        self.lon = None
+        self.Cyear:str = ''
+        self.area:int = -1
+        self.price:int = -1
+        self.mortgage:int = -1
+        self.rent:int = -1
+        self.mahale:str = ''
+        self.exp:str = ''
         self.date_time = None
 
+    def __str__(self):
+        return f"property case: {self.token}, landuse:{self.landuse}, ptype: {self.ptype}"
+    
+    def price_correction(self, price:str):
+        if 'رایگان' in price:
+            return 0
+        for item in ['\u060C', '\u200f', 'تومان', ' ']:
+            if item in price:
+                price = price.replace(item, '').strip()
+        res = int(price)       
+        return res
 
-    def refresh(self,driver: bool = False) -> None:
-        retry_sleep_time = RETRY_SLEEP_TIME
-        if driver:
-            dr = start_driver()
-            time.sleep(retry_sleep_time)
-            dr.get(self.property_link)
-            time.sleep(retry_sleep_time)
-            tmp_pgs = dr.page_source
-            dr.quit()
-        else:
-            r = requests.get(self.property_link)
-            if r.status_code == 200:
-                tmp_pgs = r.text 
-            else:
-                raise Exception("status was not 200.")
-        self.pcase_page_source = tmp_pgs
-        self.soup1 = BeautifulSoup(self.pcase_page_source, 'html.parser')
+    def is_valid(self) -> bool:
+        validation = True
+        if self.price in [0, -1]:
+            validation = False
+        if 0 < int(self.price) <= 99999:
+            validation = False
+        for price in [self.price, self.rent, self.mortgage]:
+            if re.match('^1*$', str(price)):
+                validation = False
+            if str(price) in ['123456','1234567','12345678','123456789']:
+                validation = False
+        if validation is False:
+            log(f"Api response not incloud valid price. price: {self.price} rent: {self.rent} mortgage: {self.mortgage}")    
+        return validation
 
+    @dublecheck()
+    def get_property_data(self) -> bool|None:
+        response = requests.get(f"https://api.divar.ir/v8/posts-v2/web/{self.token}")
+        if response.status_code != 200:
+            raise Exception(f"get_property_data respondse status_code: {response.status_code}") 
+        
+        json_response = response.json()
+        if 'code' in json_response.keys() and 'message' in json_response.keys():
+            if json_response["code"] == 5:
+                raise Exception(f"This token is not valid or not found.")
+            
+        if 'analytics' in json_response.keys():
+            analytics = json_response['analytics']
+            if "industry-agriculture-business" in analytics['cat3']:
+                raise Exception(f"This token is relate to industry-agriculture-business.")
+                
+        if 'sections' in json_response.keys():
+            sections = json_response['sections']
+            for section in sections:
+                if section['section_name'] == 'LIST_DATA':
+                    self.list_data_section = section
 
-
-    @dublecheck(True)
-    def get_pcase_page_source(self,retry_sleep_time=RETRY_SLEEP_TIME):
-        if not self.pcase_page_source:
-            driver = start_driver()
-            time.sleep(retry_sleep_time)
-            driver.get(self.property_link)
-            time.sleep(retry_sleep_time)
-            self.pcase_page_source = driver.page_source
-            driver.quit()
-        if not self.pcase_page_source:
-            return None
-        self.soup1 = BeautifulSoup(self.pcase_page_source, 'html.parser')
-        return self.soup1
-
-    @dublecheck(False)
-    def has_map(self) -> bool:
-        img = self.soup1.find_all('img', alt='موقعیت مکانی')
-        if img:
+                elif section['section_name'] == 'MAP':
+                    self.map_section = section
+                
+                elif section['section_name'] == 'TITLE':
+                    self.title_section = section
             return True
         else:
-            return False
-    
-    @dublecheck(True)
-    def get_loc(self,pg_source=None) -> list[float] | None:
-        pr_data = str(self.pcase_page_source) if pg_source is None else pg_source
-        lat_ = re.search(r'"latitude"\s*:\s*"?(?P<lat>\d+\.?\d*)"?', pr_data)
-        long_ = re.search(r'"longitude"\s*:\s*"?(?P<long>\d+\.?\d*)"?', pr_data)
-        if lat_ and long_:
-            lat = float(lat_.groups()[0])
-            long = float(long_.groups()[0])
+            raise Exception(f"Api response not incloud property_data.")
+           
+    def get_loc(self) -> list[float] | None:
+        if self.map_section:
+            location = self.map_section['widgets'][0]['data']['location']
+            if 'fuzzy_data' in location.keys():
+                location_ = location['fuzzy_data']['point']
+            elif 'exact_data' in location.keys():
+                location_ = location['exact_data']['point']
+            else:
+                raise Exception(f'Unknown location type.')
+
+            lat = float(location_['latitude'])
+            long = float(location_['longitude'])
             self.lat = repr(lat)
             self.lon = repr(long)
-            return [lat,long]
-        return None
-    
-    def get_price(self, cls):
-        if 'buy_price' in cls.grdict['find_key']:
-            if cls.grdict['find_key']['buy_price'] == 'price':
-                self.get_buyPrice()
-                opt = cls.grdict['find_key']['findall']
-                d1 = (self.soup1.find_all(opt[0],class_ = opt[1]))
-                d2 = d1[opt[2]]
-                data = d2.get_text('thead').split('thead')
-                self.area = int(data[3])
-                self.Cyear = data[4]
+        else:
+            raise Exception(f"Api response not incloud map_section.") 
 
-            elif cls.grdict['find_key']['buy_price'] == 'price_area':
-                self.get_buyPrice()
-                self.Cyear = 0
-
-        elif 'rent_price' in cls.grdict['find_key']:
-            self.get_rentPrice()
-            opt = cls.grdict['find_key']
-            
-            if 'اجارهٔ دفاتر صنعتی، کشاورزی و تجاری' in self.soup1.find_all('span', class_= "kt-breadcrumbs__action-text")[2]:
-                log(f'[{self.landuse}- {self.ptype}] - indasterial Case - {self.property_link}')
-                return False
-
-            style = self.soup1.find_all(opt['style_findall'][0] , class_= opt['style_findall'][1])
-            if style:
-                prices = self.soup1.find_all(opt['styled_findall'][0] , class_= opt['styled_findall'][1])
-                self.area = int(prices[0].get_text())
-                self.Cyear = prices[1].get_text()
-
-            elif not style:
-                FArea = self.soup1.find_all(opt['notstyled_findall'][0], class_= opt['notstyled_findall'][1])[opt['notstyled_findall'][2]]
-                F = FArea.get_text('p').split('p')
-
-                for i in range(len(F)):
-                    if 'متراژ' in F[i]:
-                        self.area = int(F[int(i+ (len(F)/2))])
-                    elif 'ساخت' in F[i]:
-                        self.Cyear = F[int(i+ (len(F)/2))]
-            
-            if self.mortgage is None and self.rent is None:
-                log(f'[{self.landuse}- {self.ptype}] - have no price - {self.property_link}')
-                return False
-            
-            self.price = int((self.mortgage + (self.rent*30.0)) / int(self.area))
-
-    def get_buyPrice(self) -> list | None:
-        sections = self.soup1.find_all('div', class_ = "kt-base-row kt-base-row--large kt-unexpandable-row")
-
-        for section in sections:
-            num = re.search(r'[\d۰-۹][\d۰-۹\u060C\u066C]*',section.get_text())
-            if not num:
-                pass
-
-            elif re.match(r'۱{1,3}(٬۱{3})+$', num.group().replace('\u060C', '')):
-                return [None, None]
-            #####TODO getprice validation
-            elif "قیمت هر متر" in section.get_text():
-                num = num.group().replace('\u060C', '')
-                self.price = int(num)
-            elif "متراژ" in section.get_text():
-                num= num.group().replace('\u060C', '')
-                self.area = int(num)
-
-    def get_rentPrice(self):
-        mortgage, rent = None, None
-        style = self.soup1.find_all('input' , class_= "kt-range-slider__input")
-
-        #get_mortgage, rent, area, yeare
-        if style:
-            unit_converter = 0
-            prices = self.soup1.find_all('td' , class_= 'kt-group-row-item kt-group-row-item__value kt-group-row-item--info-row')
-            for x in [3,4]:
+    def get_data(self) -> None:
+        if self.list_data_section:
+            widgets = self.list_data_section['widgets']
+            for widget in widgets:
+                if ('widget_type' in widget.keys() and widget['widget_type'] == 'GROUP_INFO_ROW'):
+                    for item in widget['data']['items']:
+                        if item['title'] == 'ساخت':
+                            self.Cyear = item['value']
+                        elif item['title'] == 'متراژ':
+                            if ' متر' in item['value']:
+                                item['value'] = item['value'].replace(' متر', '')
+                            self.area = int(item['value'])
                 
-                if 'میلیارد' in prices[x].get_text():
-                    unit_converter = 1000000000
-                elif 'میلیون' in prices[x].get_text():
-                    unit_converter = 1000000
-                elif 'هزار' in prices[x].get_text():
-                    unit_converter = 1
+                elif('data' in widget.keys() and 'title' in widget['data'].keys() and 
+                     widget['data']['title'] == 'متراژ'):
+                    if ' متر' in widget['data']['value']:
+                        widget['data']['value'] = widget['data']['value'].replace(' متر', '')
+                    self.area = int(widget['data']['value'])
+
+                elif ('widget_type' in widget.keys() and widget['widget_type'] == 'RENT_SLIDER'):
+                    mortgage = widget['data']['credit']
+                    mortgage = mortgage['value'] if 'value' in mortgage.keys() else str(0)
+                    mortgage = self.price_correction(mortgage)
+                    self.mortgage = int(mortgage)
+
+                    rent = widget['data']['rent']
+                    rent = rent['value'] if 'rent' in rent.keys() else str(0)
+                    rent = self.price_correction(rent)
+                    self.rent = int(rent)
                 
-                p = re.search(r'(\d+\.*\d*)', prices[x].get_text())
+                elif ('data' in widget.keys() and 'title' in widget['data'].keys() and 
+                     widget['data']['title'] == 'ودیعه'):
+                    mortgage = widget['data']['value']
+                    mortgage = self.price_correction(mortgage)
+                    self.mortgage = int(mortgage)
 
-                if p and re.match(r'۱{1,3}(٬۱{3})+$', p.group()):
-                    m = self.rent = self.mortgage = None
-                elif p:
-                    m = float(p.group().split(' ')[0])*unit_converter
-                else:
-                    m = 0.0
+                elif ('data' in widget.keys() and 'title' in widget['data'].keys() and 
+                     widget['data']['title'] == 'اجارهٔ ماهانه'):
+                    rent = widget['data']['value']
+                    rent = self.price_correction(rent)
+                    self.rent = int(rent)
 
-                if x == 3:
-                    self.mortgage=m
-                elif x == 4:
-                    self.rent=m
-
-        elif not style:
-            prices = self.soup1.find_all('div', class_ = "kt-base-row kt-base-row--large kt-unexpandable-row")
-            for a in prices: 
-                p = re.search(r'[\d۰-۹][\d۰-۹\u060C\u066C]*',a.get_text())
-                if p and re.match(r'۱{1,3}(٬۱{3})+$', p.group()):
-                    self.rent = self.mortgage = None
-                elif p and "ودیعه" in a.get_text():  
-                    p = p.group().replace('\u060C', '')
-                    self.mortgage = int(p)
-                elif p and "اجاره" in a.get_text():
-                    p = p.group().replace('\u060C', '')
-                    self.rent = int(p)
-                elif not p and "ودیعه" in a.get_text() and "اجاره" not in a.get_text():
-                        self.mortgage = 0
-                elif not p and "اجاره" in a.get_text() and "ودیعه" not in a.get_text():
-                        self.rent = 0
-            if mortgage == 0 and rent == 0:
-                self.rent = self.mortgage = None
-          
-    def get_district(self):
-        mahale_text = self.soup1.find_all('div', class_ = "kt-page-title__subtitle kt-page-title__subtitle--responsive-sized")[0]
-        _mahale = mahale_text.get_text().split("\u060C")[1]
-        self.mahale = _mahale
+                elif ('data' in widget.keys() and 'title' in widget['data'].keys() and
+                     widget['data']['title'] == 'قیمت هر متر'):
+                    price = widget['data']['value']
+                    price = self.price_correction(price)
+                    self.price = int(price)
+                    
+            if self.mortgage != -1 and self.rent != -1 and self.area != -1:
+                self.price = int(
+                    (self.mortgage + (self.rent*30.0)) / int(self.area)
+                    )
+            if not self.is_valid():
+                raise Exception(f"Api response not incloud valid price.")
+        else:
+            raise Exception(f"Api response not incloud list_data_section.")
 
     def get_exp(self):
-        explink = self.soup1.find_all('h1', class_ = "kt-page-title__title kt-page-title__title--responsive-sized")[0].get_text()
-        explink = explink
-        self.exp = explink
+        if self.title_section:
+            widgets = self.title_section['widgets']
+            for widget in widgets:
+                if ('widget_type' in widget.keys() and
+                     widget['widget_type'] == 'LEGEND_TITLE_ROW'):
+                    self.exp = widget['data']['title']
+                    title = widget['data']['subtitle']
+                    mahale = title.split('،')[1]
+                    self.mahale = mahale.strip()
+        else:
+            raise Exception(f'Api response not incloud the explain.')
 
-    def get_output(self):
+    def get_output(self, only_defined:bool=False):
+        self.is_valid()
         output = {
             'landuse': self.landuse, 'ptype' : self.ptype, 'price' : self.price,
             'area': self.area,         'Cyear': self.Cyear,     'mortgage': self.mortgage,
@@ -428,101 +310,83 @@ class Property:
             'mahale': self.mahale,       'exp': self.exp,       'link' : self.property_link,
             'date_time' : self.date_time
         }
+        if only_defined:
+            defined_output = {}
+            for key in output.keys():
+                if (output[key] and output[key] != -1):
+                    defined_output[key] = output[key]
+            return defined_output
         return output
 
-        #INSERT_TO_DB
-
-
-
-    def not_duplicate(self, propertyModel):
-        duplicate = propertyModel.objects.filter(link=self.property_link).exists()
-        if not duplicate:
-            return False
-        else:
+    def duplicate(self, propertyModel):
+        duplicate = propertyModel.objects.filter(link__iendswith=self.token).exists()
+        if duplicate:
+            log(f"The {self.token} is duplicate.")
             return True
+        else:
+            return False
+
 
     def insert(self, propertyModel):
-        log(self.get_output())
         try:
-            propertyModel.objects.create(**self.get_output())
-
-        except Exception as error:
-            log(f'[{self.landuse}- {self.ptype}] - in insert step errore: {str(error)} -- {str(self.get_output())}.')
-            raise Exception
-    
-    def update(self, field:list|str='all'):
-        try:
-            propertycase = propertyModel.objects.get(link=self.property_link)
-            card = cards(self.landuse, self.ptype)
-            output = []
-            self.get_pcase_page_source()
-            self.date_time = timezone.now()
-
-            if not self.pcase_page_source:
-                log(f'[{self.landuse}- {self.ptype}] - pcase_page_source is not availabe.')
-                return None
-            if not self.soup1:
-                log(f'[{self.landuse}- {self.ptype}] - soup1 is not founded. ({self.property_link})')
-                return None
+            if self.is_valid():
+                propertyModel.objects.create(**self.get_output())
+            else:
+                raise Exception(f"Price is not valid.")
             
-            if self.pcase_page_source.find('این صفحه حذف شده یا وجود ندارد') != -1:
-                #if input('do you want to delete this case? [y]/n ') != 'n':
-                propertycase.delete()
-                log(f'[{self.landuse}- {self.ptype}] - is not exist-deleted! ({self.property_link})')
-                return None
+        except Exception as error:
+            raise Exception(f'In insert step errore: {str(error)}-{str(self.get_output())}.')
+    
+    def load(self, field:list|str='all'):
+        try:
+            self.get_property_data()
+            self.date_time = timezone.now()
             
             if field =='all' or 'loc' in field:
-                if not self.has_map():
-                    log(f'[{self.landuse}- {self.ptype}] - has map is false. ({self.property_link})')
-                    print(f'[{self.landuse}- {self.ptype}] - has map is false. ({self.property_link})')
-                    if input('do you want to delete this case? [y]/n ') != 'n':
-                        propertycase.delete()
-                        log(f'[{self.landuse}- {self.ptype}] - deleted. ({self.property_link})')
-                    return None
                 self.get_loc()
-                if not (self.lat or self.long):
-                    log(f'[{self.landuse}- {self.ptype}] - have no lat, long. ({self.property_link})')
-                    print(f'[{self.landuse}- {self.ptype}] - have no lat, long. ({self.property_link})')
-                    if input('do you want to delete this case? [y]/n ') != 'n':
-                        propertycase.delete()
-                        log(f'[{self.landuse}- {self.ptype}] - deleted. ({self.property_link})')
-                    return None
-                output.append(('lat',self.lat))
-                output.append(('lon',self.long))
+                if not (self.lat or self.lon):
+                    raise Exception(f'have no lat, long.')
 
             if field =='all' or 'price' in field:
-                self.get_price(card)
+                self.get_data()
                 if not self.price:
-                    #if input('do you want to delete this case? [y]/n ') != 'n':
-                    propertycase.delete()
-                    log(f'[{self.landuse}- {self.ptype}] - have no price- deleted! ({self.property_link})')
-                    return None
-                output.append(('price',self.price))
-                output.append(('rent',self.rent))
-                output.append(('mortgage',self.mortgage))
+                    raise Exception(f'have no price.')
 
             if field =='all' or 'other' in field:
-                self.get_district()
-                output.append(('mahale',self.mahale))
                 self.get_exp()
-                output.append(('exp', self.exp))
+                    
+        except Exception as error:
+            raise Exception(f'{str(error)}')
+
+    def delete(self):
+        try:
+            propertycase = propertyModel.objects.get(link__iendswith=self.token)
+            propertycase.delete()
+            log(f'case: \'{self.token}\' is deleted.')
+            return 'Deleted!:('
+        
+        except Exception as error:
+            raise Exception(f'{str(error)}.')
 
             
+    def update(self):
+        try:
+            if self.is_valid():
+                propertycase = propertyModel.objects.get(link__iendswith=self.token)
+                output = self.get_output(only_defined=True)
+                for item in output:
+                    if item in propertycase.__dict__.keys():
+                        propertycase.__dict__[item] = output[item]
 
-            for item in output:
-                if item[0] in propertycase.__dict__.keys():
-                    propertycase.__dict__[item[0]] = item[1]
+                propertycase.save()
+            else:
+                raise Exception(f"Price is not valid.")
 
-            propertycase.save()
             log(f'last_case: {propertycase}\n{22*" "}updated_case: {output}\n{30*' '}case: \'{propertycase.link[-8:]}\' is updated.')
             return 'Updated!:)'
+        
         except Exception as error:
-            log(f'errore: {str(error)}.')
-            raise Exception
-
-
-
-
+            raise Exception(f'{str(error)}')
 
 #LOG
 logging.basicConfig(filename='log.log', level=logging.INFO, format='%(asctime)s: %(message)s')
@@ -539,50 +403,7 @@ def logreader():
         return logtxt[-1] + str(land_typ_stat)
 
 
-#SELENIUM_DRIVER
-def start_driver(browser=DRIVER_BROWSER, driver_timeout=DRIVER_TIMEOUT):
-    if browser == 'chrome':
-        from selenium.webdriver import Chrome as browserwebdriver
-        from selenium.webdriver.chrome.service import Service
-        from selenium.webdriver.chrome.options import Options
-        from webdriver_manager.chrome import ChromeDriverManager as drivermanager
-        _url = None
-        _latest_release_url = None
 
-    elif browser == 'edge':
-        from selenium.webdriver import Edge as browserwebdriver
-        from selenium.webdriver.edge.service import Service 
-        from selenium.webdriver.edge.options import Options 
-        from webdriver_manager.microsoft import EdgeChromiumDriverManager as drivermanager
-        _url="https://msedgedriver.microsoft.com"
-        _latest_release_url="https://msedgedriver.microsoft.com/LATEST_RELEASE"
- 
-    else:
-        raise Exception("browser is not valid.")
-
-
-    if os.path.isfile(f"{browser}_driver.txt"):
-        with open(f"{browser}_driver.txt", 'r') as file:
-            PathDriverManager = file.read().strip()
-    else:
-        with open(f"{browser}_driver.txt", 'w') as file:
-            PathDriverManager = drivermanager(url=_url, latest_release_url=_latest_release_url).install() 
-            file.write(PathDriverManager)
-
-    options = Options() 
-    options.page_load_strategy = 'eager'
-    options.add_argument("--headless=new")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--window-size=1920x1080")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    service = Service(PathDriverManager)
-    driver = browserwebdriver(options=options, service=service) # type: ignore
-    driver.set_page_load_timeout(driver_timeout)
-    return driver
-
-
-#GET_DATA_UPDATE
 
 def update_status(landuse, ptype, activat):    
     for grand_dict in GRAND_DICT:
