@@ -1,10 +1,12 @@
 .env
 **/__pycache__/*
 *.pyc
-*/.ipynb_checkpoints/
+**/.ipynb_checkpoints/*
 *.swp
 venv
 msedgedriver.txt
 chromedriver.txt
 TODO
 microsoft-edge-stable_138.0.3351.83-1_amd64.deb
+updateData/management/commands/.ipynb_checkpoints/Untitled-checkpoint.ipynb
+**/*.ipynb
